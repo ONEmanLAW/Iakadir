@@ -12,6 +12,3 @@ extension Color {
     static let primaryGreen  = Color("greenPrimary")
     static let lightPink     = Color("pinkLight")
 }
-
-
-
