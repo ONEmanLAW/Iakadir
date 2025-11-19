@@ -14,7 +14,7 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             Text("Bienvenue dans Iakadir")
-                .foregroundColor(.appWhite)
+                .foregroundColor(.white)
                 .font(.title)
         }
     }
@@ -23,3 +23,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
