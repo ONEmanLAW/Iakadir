@@ -9,9 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        Text("Bienvenue dans Iakadir")
-            .font(.title)
-            .padding()
+        ZStack {
+            Color.primaryPurple
+                .ignoresSafeArea()
+
+            Text("Bienvenue dans Iakadir")
+                .foregroundColor(.appWhite)
+                .font(.title)
+        }
     }
 }
 
