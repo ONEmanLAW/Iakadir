@@ -12,17 +12,10 @@ struct OnboardingView: View {
         ZStack {
             Color.black
                 .ignoresSafeArea()
-            
-            Image("onboardingBackground")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-                .blur(radius: 4)
-                .opacity(0.9)
-            
+
             VStack {
                 Spacer().frame(height: 80)
-                
+
                 Text("iakadir")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.black)
@@ -32,22 +25,22 @@ struct OnboardingView: View {
                         Capsule()
                             .fill(Color.primaryGreen)
                     )
-                
+
                 ZStack {
                     Circle()
                         .fill(Color.primaryGreen.opacity(0.7))
                         .frame(width: 260, height: 260)
                         .blur(radius: 80)
-                    
+
                     Image("robotMain")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 141.27, height: 270)
                 }
                 .padding(.top, 24)
-                
+
                 Spacer()
-                
+
                 Text("Ton assistant IA,\nau quotidien.")
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundColor(.white)
@@ -55,8 +48,9 @@ struct OnboardingView: View {
                     .frame(width: 306)
                     .padding(.horizontal, 32)
                     .padding(.bottom, 24)
-                
+
                 Button {
+                    // action
                 } label: {
                     Text("Commencer")
                         .font(.system(size: 17, weight: .semibold))
@@ -78,3 +72,5 @@ struct OnboardingView: View {
 #Preview {
     OnboardingView()
 }
+
+
