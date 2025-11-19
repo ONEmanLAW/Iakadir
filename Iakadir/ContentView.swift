@@ -9,18 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        ZStack {
-            Color.primaryPurple
-                .ignoresSafeArea()
-
-            Text("Bienvenue dans Iakadir")
-                .foregroundColor(.white)
-                .font(.title)
-        }
+        OnboardingView()
     }
 }
 
 #Preview {
     ContentView()
 }
+
 
