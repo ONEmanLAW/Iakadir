@@ -12,7 +12,7 @@ struct OnboardingView: View {
         ZStack {
             Color.black
                 .ignoresSafeArea()
-        
+            
             Image("onboardingBackground")
                 .resizable()
                 .scaledToFill()
@@ -22,7 +22,7 @@ struct OnboardingView: View {
             
             VStack {
                 Spacer().frame(height: 80)
-            
+                
                 Text("iakadir")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.black)
@@ -34,6 +34,10 @@ struct OnboardingView: View {
                     )
                 
                 ZStack {
+                    Circle()
+                        .fill(Color.primaryGreen.opacity(0.7))
+                        .frame(width: 260, height: 260)
+                        .blur(radius: 80)
                     
                     Image("robotMain")
                         .resizable()
@@ -48,7 +52,7 @@ struct OnboardingView: View {
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
-                    .frame(width: 306)                             // largeur Figma
+                    .frame(width: 306)
                     .padding(.horizontal, 32)
                     .padding(.bottom, 24)
                 
