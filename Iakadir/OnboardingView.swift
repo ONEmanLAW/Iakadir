@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingView: View {
+    let onStart: () -> Void
+
     var body: some View {
         ZStack {
             Color.black
@@ -50,7 +52,7 @@ struct OnboardingView: View {
                     .padding(.bottom, 24)
 
                 Button {
-                    // action
+                    onStart()
                 } label: {
                     Text("Commencer")
                         .font(.system(size: 17, weight: .semibold))
@@ -70,7 +72,7 @@ struct OnboardingView: View {
 }
 
 #Preview {
-    OnboardingView()
+    OnboardingView(onStart: {})
 }
 
 
