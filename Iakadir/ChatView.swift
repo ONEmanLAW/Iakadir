@@ -86,7 +86,6 @@ struct ChatView: View {
             VStack(spacing: 16) {
 
                 if messages.isEmpty {
-            
                     VStack(spacing: 12) {
                         Text("Pose-moi une question pour commencer.")
                             .foregroundColor(.white.opacity(0.7))
@@ -176,13 +175,14 @@ struct MessageBubble: View {
                 .background(
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(isUser
-                              ? Color(red: 0.05, green: 0.06, blue: 0.18)
+                              ? Color(red: 0.06, green: 0.07, blue: 0.20)
                               : Color(red: 0.13, green: 0.13, blue: 0.15))
                 )
-                .frame(maxWidth: 280, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
 
             if !isUser { Spacer() }
         }
+        .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
         .padding(.horizontal, 4)
     }
 }
