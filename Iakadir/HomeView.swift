@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  Iakadir
-//
-//  Created by digital on 19/11/2025.
-//
-
 import SwiftUI
 
 struct HomeView: View {
@@ -38,9 +31,10 @@ struct HomeView: View {
         .sheet(isPresented: $showMenu) {
             menuSheet
         }
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .navigationBar)   // cache la barre grise
     }
 
+    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -88,6 +82,8 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Hero section
+
     private var heroSection: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 32)
@@ -108,6 +104,7 @@ struct HomeView: View {
                     .font(.system(size: 28, weight: .semibold))
 
                 VStack(spacing: 16) {
+                    // grande carte
                     ActionCard(
                         title: "Résumer\nun son",
                         iconName: "ear.badge.waveform",
@@ -115,13 +112,21 @@ struct HomeView: View {
                         isLarge: true
                     )
 
+                    // deux cartes plus petites
                     HStack(spacing: 16) {
-                        ActionCard(
-                            title: "Parler à l’IA",
-                            iconName: "text.bubble",
-                            background: Color(red: 0.80, green: 0.75, blue: 1.0),
-                            isLarge: false
-                        )
+
+                        // 👉 Parler à l’IA : navigation vers ChatView
+                        NavigationLink {
+                            ChatView()
+                        } label: {
+                            ActionCard(
+                                title: "Parler à l’IA",
+                                iconName: "text.bubble",
+                                background: Color(red: 0.80, green: 0.75, blue: 1.0),
+                                isLarge: false
+                            )
+                        }
+                        .buttonStyle(.plain)
 
                         ActionCard(
                             title: "Générer une image",
@@ -137,6 +142,8 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Historique
+
     private var historyHeader: some View {
         HStack {
             Text("Historique")
@@ -144,7 +151,7 @@ struct HomeView: View {
                 .font(.system(size: 20, weight: .semibold))
             Spacer()
             Button {
-                // plus tard tout voire
+                // plus tard : voir tout
             } label: {
                 Text("Voir tout")
                     .foregroundColor(.white.opacity(0.6))
@@ -175,6 +182,7 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Menu déconnexion
 
     private var menuSheet: some View {
         NavigationStack {
@@ -213,6 +221,7 @@ struct HomeView: View {
     }
 }
 
+// MARK: - Sous-vues réutilisables
 
 struct ActionCard: View {
     let title: String
