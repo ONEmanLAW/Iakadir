@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ChatMessage: Identifiable {
-    let id = UUID()
-    let text: String
+    var id = UUID()
+    var text: String
     let isUser: Bool
 }
 
@@ -82,7 +83,9 @@ struct ChatView: View {
 
 
     private var chatContent: some View {
-        ScrollView {
+        let lastBotId = messages.last(where: { !$0.isUser })?.id
+
+        return ScrollView {
             VStack(spacing: 16) {
 
                 if messages.isEmpty {
@@ -96,10 +99,43 @@ struct ChatView: View {
                     .frame(maxWidth: .infinity)
                 } else {
                     ForEach(messages) { message in
-                        MessageBubble(
-                            text: message.text,
-                            isUser: message.isUser
-                        )
+                        if !message.isUser && message.id == lastBotId {
+                            VStack(spacing: 0) {
+                                MessageBubble(
+                                    text: message.text,
+                                    isUser: false
+                                )
+
+                                HStack(spacing: 32) {
+                                    ActionChip(
+                                        icon: "arrow.clockwise",
+                                        title: "Régénérer"
+                                    ) {
+                                        regenerateLastBotMessage()
+                                    }
+
+                                    ActionChip(
+                                        icon: "doc.on.doc",
+                                        title: "Copier"
+                                    ) {
+                                        copyLastBotMessage()
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                        .fill(Color.black.opacity(0.95))
+                                )
+                                .padding(.horizontal, 4)
+                                .padding(.top, 4)
+                            }
+                        } else {
+                            MessageBubble(
+                                text: message.text,
+                                isUser: message.isUser
+                            )
+                        }
                     }
                 }
             }
@@ -156,6 +192,16 @@ struct ChatView: View {
         let botMessage = ChatMessage(text: botText, isUser: false)
         messages.append(botMessage)
     }
+
+    private func regenerateLastBotMessage() {
+        guard let index = messages.lastIndex(where: { !$0.isUser }) else { return }
+        messages[index].text += " (regénéré)"
+    }
+
+    private func copyLastBotMessage() {
+        guard let lastBot = messages.last(where: { !$0.isUser }) else { return }
+        UIPasteboard.general.string = lastBot.text
+    }
 }
 
 
@@ -187,8 +233,26 @@ struct MessageBubble: View {
     }
 }
 
+struct ActionChip: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.system(size: 13, weight: .medium))
+            .foregroundColor(Color.primaryGreen)
+        }
+    }
+}
+
 #Preview {
     NavigationStack {
         ChatView()
     }
 }
+
