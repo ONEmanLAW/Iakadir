@@ -7,8 +7,17 @@
 
 import SwiftUI
 
+struct ChatMessage: Identifiable {
+    let id = UUID()
+    let text: String
+    let isUser: Bool
+}
+
 struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
+
+    @State private var messages: [ChatMessage] = []
+    @State private var inputText: String = ""
 
     var body: some View {
         ZStack {
@@ -76,51 +85,24 @@ struct ChatView: View {
         ScrollView {
             VStack(spacing: 16) {
 
-                VStack(spacing: 16) {
-
-                    MessageBubble(
-                        text: "Hello, moi c’est Ugo sans H.\nQuelle est ta question ?",
-                        isUser: false,
-                        isLargeBlock: false
-                    )
-
-                    MessageBubble(
-                        text: "Est-ce que Kotlin en XML est plus simple que SwiftUI ?",
-                        isUser: true,
-                        isLargeBlock: false
-                    )
-
-                    // grosse réponse IA
-                    VStack(spacing: 0) {
+                if messages.isEmpty {
+            
+                    VStack(spacing: 12) {
+                        Text("Pose-moi une question pour commencer.")
+                            .foregroundColor(.white.opacity(0.7))
+                            .font(.system(size: 15))
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 40)
+                    }
+                    .frame(maxWidth: .infinity)
+                } else {
+                    ForEach(messages) { message in
                         MessageBubble(
-                            text: """
-Écoute-moi bien petit con, la prochaine fois que tu me parles de XML, je te fais avaler ton PC.
-
-Donc, retourne faire du SwiftUI et ne me parle plus jamais d’Android, sinon ça va très mal se passer pour toi.
-
-Sinon, pour être plus sérieux :
-
-La réponse est évidemment… NON.
-""",
-                            isUser: false,
-                            isLargeBlock: true
-                        )
-
-                       
-                        HStack(spacing: 32) {
-                            ActionChip(icon: "arrow.clockwise", title: "Régénérer")
-                            ActionChip(icon: "doc.on.doc", title: "Copier")
-                            ActionChip(icon: "square.and.arrow.up", title: "Partager")
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                                .fill(Color.black.opacity(0.9))
+                            text: message.text,
+                            isUser: message.isUser
                         )
                     }
                 }
-                .padding(.top, 8)
             }
             .padding(.horizontal, 4)
         }
@@ -129,15 +111,17 @@ La réponse est évidemment… NON.
 
     private var inputBar: some View {
         HStack {
-            Text("Écris une demande ici")
-                .foregroundColor(.white.opacity(0.6))
+            TextField("Écris une demande ici", text: $inputText)
+                .foregroundColor(.white)
                 .font(.system(size: 15))
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
                 .padding(.leading, 20)
 
-            Spacer()
+            Spacer(minLength: 8)
 
             Button {
-                
+                sendMessage()
             } label: {
                 ZStack {
                     Circle()
@@ -154,10 +138,24 @@ La réponse est évidemment… NON.
         .frame(height: 56)
         .background(
             RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(Color(red: 0.07, green: 0.08, blue: 0.16)) // genre dark bleu/violet
+                .fill(Color(red: 0.07, green: 0.08, blue: 0.16))
         )
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
+    }
+
+
+    private func sendMessage() {
+        let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let userMessage = ChatMessage(text: trimmed, isUser: true)
+        messages.append(userMessage)
+        inputText = ""
+
+        let botText = "J’ai reçu ton message."
+        let botMessage = ChatMessage(text: botText, isUser: false)
+        messages.append(botMessage)
     }
 }
 
@@ -165,7 +163,6 @@ La réponse est évidemment… NON.
 struct MessageBubble: View {
     let text: String
     let isUser: Bool
-    let isLargeBlock: Bool
 
     var body: some View {
         HStack {
@@ -178,26 +175,15 @@ struct MessageBubble: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(isUser ? Color(red: 0.05, green: 0.06, blue: 0.18) : Color(red: 0.13, green: 0.13, blue: 0.15))
+                        .fill(isUser
+                              ? Color(red: 0.05, green: 0.06, blue: 0.18)
+                              : Color(red: 0.13, green: 0.13, blue: 0.15))
                 )
-                .frame(maxWidth: isLargeBlock ? .infinity : 280, alignment: .leading)
+                .frame(maxWidth: 280, alignment: .leading)
 
             if !isUser { Spacer() }
         }
-    }
-}
-
-struct ActionChip: View {
-    let icon: String
-    let title: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-            Text(title)
-        }
-        .font(.system(size: 13, weight: .medium))
-        .foregroundColor(Color.primaryGreen)
+        .padding(.horizontal, 4)
     }
 }
 
