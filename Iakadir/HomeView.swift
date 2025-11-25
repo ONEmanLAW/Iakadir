@@ -410,9 +410,12 @@ struct HistoryRow: View {
 
             Spacer()
 
+            // 👉 Hitbox agrandie sans grossir l’icône
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
                     .foregroundColor(.white.opacity(0.7))
+                    .padding(10)                  // zone tap + grande
+                    .contentShape(Rectangle())    // toute la zone padding est cliquable
             }
         }
         .padding(.horizontal, 16)
