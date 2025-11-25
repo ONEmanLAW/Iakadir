@@ -13,6 +13,7 @@ struct HomeView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
+    // état pour le menu des trois points
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
@@ -28,7 +29,7 @@ struct HomeView: View {
                 heroSection
 
                 historyHeader
-                historyList
+                historyList   // zone historique
 
                 Spacer()
             }
@@ -56,6 +57,7 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -103,6 +105,7 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Hero section
 
     private var heroSection: some View {
         ZStack(alignment: .topLeading) {
@@ -132,6 +135,7 @@ struct HomeView: View {
                     )
 
                     HStack(spacing: 16) {
+                        // Nouvelle conversation
                         NavigationLink {
                             ChatView(conversationID: nil)
                         } label: {
@@ -158,6 +162,7 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Historique
 
     private var historyHeader: some View {
         HStack {
@@ -180,7 +185,6 @@ struct HomeView: View {
         let sorted = chatStore.conversations
             .sorted { $0.updatedAt > $1.updatedAt }
 
-        // max 3 affichées
         let topThree = Array(sorted.prefix(3))
 
         VStack(spacing: 12) {
@@ -192,23 +196,24 @@ struct HomeView: View {
                     .padding(.top, 8)
             } else {
                 ForEach(topThree) { conv in
-                    HistoryRow(
-                        iconBackground: Color.primaryGreen,
-                        iconName: "text.bubble",
-                        text: displayText(for: conv),
-                        onMoreTapped: {
-                            selectedConversationID = conv.id
-                            showConversationOptions = true
-                        }
-                    )
-                    .background(
-                        NavigationLink("", destination: ChatView(conversationID: conv.id))
-                            .opacity(0)
-                    )
+                    NavigationLink {
+                        ChatView(conversationID: conv.id)
+                    } label: {
+                        HistoryRow(
+                            iconBackground: Color.primaryGreen,
+                            iconName: "text.bubble",
+                            text: displayText(for: conv),
+                            onMoreTapped: {
+                                selectedConversationID = conv.id
+                                showConversationOptions = true
+                            }
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
-        .frame(height: 220, alignment: .top)
+        .frame(height: 220, alignment: .top) // hauteur fixe pour garder la même DA
     }
 
     private func displayText(for conv: Conversation) -> String {
@@ -221,6 +226,7 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Menu déconnexion
 
     private var menuSheet: some View {
         NavigationStack {
@@ -258,6 +264,7 @@ struct HomeView: View {
         .presentationDetents([.height(220)])
     }
 
+    // MARK: - Actions rename/delete
 
     private func prepareRename() {
         guard let id = selectedConversationID,
@@ -334,6 +341,7 @@ struct HomeView: View {
     }
 }
 
+// MARK: - Sous-vues
 
 struct ActionCard: View {
     let title: String
