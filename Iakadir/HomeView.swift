@@ -13,7 +13,7 @@ struct HomeView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
-    // état pour le menu des trois points
+    // état pour le menu des trois points (sur les 3 dernières conv)
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
@@ -170,8 +170,8 @@ struct HomeView: View {
                 .foregroundColor(.white)
                 .font(.system(size: 20, weight: .semibold))
             Spacer()
-            Button {
-                // plus tard : voir tout
+            NavigationLink {
+                HistoryView()   // 👉 nouvel écran
             } label: {
                 Text("Voir tout")
                     .foregroundColor(.white.opacity(0.6))
@@ -264,7 +264,7 @@ struct HomeView: View {
         .presentationDetents([.height(220)])
     }
 
-    // MARK: - Actions rename/delete
+    // MARK: - Actions rename/delete (home)
 
     private func prepareRename() {
         guard let id = selectedConversationID,
@@ -393,15 +393,7 @@ struct HistoryRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(iconBackground)
-                    .frame(width: 40, height: 40)
-
-                Image(systemName: iconName)
-                    .foregroundColor(.black)
-                    .font(.system(size: 18, weight: .medium))
-            }
+            ZstackIcon
 
             Text(text)
                 .foregroundColor(.white)
@@ -410,12 +402,11 @@ struct HistoryRow: View {
 
             Spacer()
 
-            // 👉 Hitbox agrandie sans grossir l’icône
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
                     .foregroundColor(.white.opacity(0.7))
-                    .padding(10)                  // zone tap + grande
-                    .contentShape(Rectangle())    // toute la zone padding est cliquable
+                    .padding(10)                  // zone cliquable élargie
+                    .contentShape(Rectangle())
             }
         }
         .padding(.horizontal, 16)
@@ -424,6 +415,18 @@ struct HistoryRow: View {
             RoundedRectangle(cornerRadius: 26)
                 .fill(Color.white.opacity(0.06))
         )
+    }
+
+    private var ZstackIcon: some View {
+        ZStack {
+            Circle()
+                .fill(iconBackground)
+                .frame(width: 40, height: 40)
+
+            Image(systemName: iconName)
+                .foregroundColor(.black)
+                .font(.system(size: 18, weight: .medium))
+        }
     }
 }
 
