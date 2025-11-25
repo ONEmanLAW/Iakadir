@@ -8,7 +8,7 @@
 import SwiftUI
 import UIKit
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Codable {
     var id = UUID()
     var text: String
     let isUser: Bool
@@ -16,9 +16,12 @@ struct ChatMessage: Identifiable {
 
 struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var chatStore: ChatStore
+
+    let conversationID: UUID?
 
     @State private var messages: [ChatMessage] = []
-    @State private var inputText: String = ""
+    @State private var resolvedConversationID: UUID?
 
     var body: some View {
         ZStack {
@@ -27,9 +30,7 @@ struct ChatView: View {
             VStack(spacing: 16) {
 
                 header
-
                 chatContent
-
                 inputBar
             }
             .padding(.horizontal, 16)
@@ -37,8 +38,10 @@ struct ChatView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            setupConversation()
+        }
     }
-
 
     private var header: some View {
         HStack {
@@ -179,6 +182,32 @@ struct ChatView: View {
         .padding(.bottom, 4)
     }
 
+    @State private var inputText: String = ""
+
+
+    private func setupConversation() {
+        if let id = resolvedConversationID,
+           let conv = chatStore.conversation(with: id) {
+            messages = conv.messages
+            return
+        }
+
+        if let passedID = conversationID,
+           let conv = chatStore.conversation(with: passedID) {
+            resolvedConversationID = conv.id
+            messages = conv.messages
+            return
+        }
+
+        let newConv = chatStore.createConversation()
+        resolvedConversationID = newConv.id
+        messages = newConv.messages
+    }
+
+    private func persistMessages() {
+        guard let id = resolvedConversationID else { return }
+        chatStore.updateConversation(id: id, messages: messages)
+    }
 
     private func sendMessage() {
         let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -191,11 +220,14 @@ struct ChatView: View {
         let botText = "J’ai reçu ton message."
         let botMessage = ChatMessage(text: botText, isUser: false)
         messages.append(botMessage)
+
+        persistMessages()
     }
 
     private func regenerateLastBotMessage() {
         guard let index = messages.lastIndex(where: { !$0.isUser }) else { return }
         messages[index].text += " (regénéré)"
+        persistMessages()
     }
 
     private func copyLastBotMessage() {
@@ -203,7 +235,6 @@ struct ChatView: View {
         UIPasteboard.general.string = lastBot.text
     }
 }
-
 
 struct MessageBubble: View {
     let text: String
@@ -252,7 +283,8 @@ struct ActionChip: View {
 
 #Preview {
     NavigationStack {
-        ChatView()
+        ChatView(conversationID: nil)
+            .environmentObject(ChatStore())
     }
 }
 

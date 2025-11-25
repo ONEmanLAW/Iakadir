@@ -1,8 +1,16 @@
+//
+//  HomeView.swift
+//  Iakadir
+//
+//  Created by digital on 19/11/2025.
+//
+
 import SwiftUI
 
 struct HomeView: View {
     let username: String
     @EnvironmentObject var auth: AuthViewModel
+    @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
     var body: some View {
@@ -11,15 +19,10 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: 24) {
 
-                // HEADER
                 header
-
-                // BLOC "Qu’est-ce que tu veux faire ?"
                 heroSection
 
-                // SECTION HISTORIQUE
                 historyHeader
-
                 historyList
 
                 Spacer()
@@ -31,10 +34,9 @@ struct HomeView: View {
         .sheet(isPresented: $showMenu) {
             menuSheet
         }
-        .toolbar(.hidden, for: .navigationBar)   // cache la barre grise
+        .toolbar(.hidden, for: .navigationBar)
     }
 
-    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -82,7 +84,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Hero section
 
     private var heroSection: some View {
         ZStack(alignment: .topLeading) {
@@ -104,7 +105,6 @@ struct HomeView: View {
                     .font(.system(size: 28, weight: .semibold))
 
                 VStack(spacing: 16) {
-                    // grande carte
                     ActionCard(
                         title: "Résumer\nun son",
                         iconName: "ear.badge.waveform",
@@ -112,12 +112,9 @@ struct HomeView: View {
                         isLarge: true
                     )
 
-                    // deux cartes plus petites
                     HStack(spacing: 16) {
-
-                        // 👉 Parler à l’IA : navigation vers ChatView
                         NavigationLink {
-                            ChatView()
+                            ChatView(conversationID: nil)
                         } label: {
                             ActionCard(
                                 title: "Parler à l’IA",
@@ -142,8 +139,6 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Historique
-
     private var historyHeader: some View {
         HStack {
             Text("Historique")
@@ -160,29 +155,38 @@ struct HomeView: View {
         }
     }
 
+    @ViewBuilder
     private var historyList: some View {
-        VStack(spacing: 12) {
-            HistoryRow(
-                iconBackground: Color.primaryGreen,
-                iconName: "ear.badge.waveform",
-                text: "Swift est un langage de programmation..."
-            )
+        let sorted = chatStore.conversations
+            .sorted { $0.updatedAt > $1.updatedAt }
 
-            HistoryRow(
-                iconBackground: Color(red: 0.80, green: 0.75, blue: 1.0),
-                iconName: "text.bubble",
-                text: "Dis-moi qui est Elvia Front, s’il te plaît..."
-            )
+        let topThree = Array(sorted.prefix(3))
 
-            HistoryRow(
-                iconBackground: Color.lightPink,
-                iconName: "photo.on.rectangle",
-                text: "Un sanglier qui danse avec son père..."
-            )
+        if topThree.isEmpty {
+            Text("Aucune conversation pour l’instant.")
+                .foregroundColor(.white.opacity(0.5))
+                .font(.system(size: 14))
+                .padding(.top, 8)
+        } else {
+            VStack(spacing: 12) {
+                ForEach(topThree) { conv in
+                    NavigationLink {
+                        ChatView(conversationID: conv.id)
+                    } label: {
+                        HistoryRow(
+                            iconBackground: Color.primaryGreen,
+                            iconName: "text.bubble",
+                            text: conv.lastMessagePreview.isEmpty
+                                ? "Nouvelle conversation"
+                                : conv.lastMessagePreview
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
     }
 
-    // MARK: - Menu déconnexion
 
     private var menuSheet: some View {
         NavigationStack {
@@ -221,7 +225,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Sous-vues réutilisables
 
 struct ActionCard: View {
     let title: String
@@ -304,4 +307,5 @@ struct HistoryRow: View {
 #Preview {
     HomeView(username: "Ethan")
         .environmentObject(AuthViewModel())
+        .environmentObject(ChatStore())
 }
