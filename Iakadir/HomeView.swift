@@ -13,7 +13,6 @@ struct HomeView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
-    
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
@@ -56,6 +55,7 @@ struct HomeView: View {
             renameSheet
         }
     }
+
 
     private var header: some View {
         HStack {
@@ -158,6 +158,7 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
     }
 
+
     private var historyHeader: some View {
         HStack {
             Text("Historique")
@@ -179,33 +180,35 @@ struct HomeView: View {
         let sorted = chatStore.conversations
             .sorted { $0.updatedAt > $1.updatedAt }
 
+        // max 3 affichées
         let topThree = Array(sorted.prefix(3))
 
-        if topThree.isEmpty {
-            Text("Aucune conversation pour l’instant.")
-                .foregroundColor(.white.opacity(0.5))
-                .font(.system(size: 14))
-                .padding(.top, 8)
-        } else {
-            VStack(spacing: 12) {
+        VStack(spacing: 12) {
+            if topThree.isEmpty {
+                Text("Aucune conversation pour l’instant.")
+                    .foregroundColor(.white.opacity(0.5))
+                    .font(.system(size: 14))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
+            } else {
                 ForEach(topThree) { conv in
-                    NavigationLink {
-                        ChatView(conversationID: conv.id)
-                    } label: {
-                        HistoryRow(
-                            iconBackground: Color.primaryGreen,
-                            iconName: "text.bubble",
-                            text: displayText(for: conv),
-                            onMoreTapped: {
-                                selectedConversationID = conv.id
-                                showConversationOptions = true
-                            }
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    HistoryRow(
+                        iconBackground: Color.primaryGreen,
+                        iconName: "text.bubble",
+                        text: displayText(for: conv),
+                        onMoreTapped: {
+                            selectedConversationID = conv.id
+                            showConversationOptions = true
+                        }
+                    )
+                    .background(
+                        NavigationLink("", destination: ChatView(conversationID: conv.id))
+                            .opacity(0)
+                    )
                 }
             }
         }
+        .frame(height: 220, alignment: .top)
     }
 
     private func displayText(for conv: Conversation) -> String {
@@ -217,6 +220,7 @@ struct HomeView: View {
             return "Nouvelle conversation"
         }
     }
+
 
     private var menuSheet: some View {
         NavigationStack {
