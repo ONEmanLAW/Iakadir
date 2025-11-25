@@ -2,14 +2,14 @@
 //  ChatStore.swift
 //  Iakadir
 //
-//  Created by digital on 25/11/2025.
+//  Created by digital on 24/11/2025.
 //
 
 import Foundation
 
 struct Conversation: Identifiable, Codable {
     var id: UUID
-    var title: String
+    var title: String           // titre custom (peut être vide)
     var lastMessagePreview: String
     var updatedAt: Date
     var messages: [ChatMessage]
@@ -46,16 +46,15 @@ class ChatStore: ObservableObject {
         }
     }
 
-    // Créer une nouvelle conversation (depuis la carte "Parler à l’IA")
     func createConversation() -> Conversation {
         let conversation = Conversation(
             id: UUID(),
-            title: "Nouvelle conversation",
+            title: "",
             lastMessagePreview: "",
             updatedAt: Date(),
             messages: []
         )
-        conversations.insert(conversation, at: 0) // en haut de la liste
+        conversations.insert(conversation, at: 0)
         save()
         return conversation
     }
@@ -75,6 +74,17 @@ class ChatStore: ObservableObject {
         conv.updatedAt = Date()
 
         conversations[index] = conv
+        save()
+    }
+
+    func renameConversation(id: UUID, newTitle: String) {
+        guard let index = conversations.firstIndex(where: { $0.id == id }) else { return }
+        conversations[index].title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        save()
+    }
+
+    func deleteConversation(id: UUID) {
+        conversations.removeAll { $0.id == id }
         save()
     }
 }

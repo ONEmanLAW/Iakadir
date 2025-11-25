@@ -13,6 +13,12 @@ struct HomeView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
+    
+    @State private var selectedConversationID: UUID?
+    @State private var showConversationOptions = false
+    @State private var showRenameSheet = false
+    @State private var renameText: String = ""
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -35,8 +41,21 @@ struct HomeView: View {
             menuSheet
         }
         .toolbar(.hidden, for: .navigationBar)
+        .confirmationDialog("Options de la conversation",
+                            isPresented: $showConversationOptions,
+                            titleVisibility: .visible) {
+            Button("Renommer") {
+                prepareRename()
+            }
+            Button("Supprimer", role: .destructive) {
+                deleteSelectedConversation()
+            }
+            Button("Annuler", role: .cancel) {}
+        }
+        .sheet(isPresented: $showRenameSheet) {
+            renameSheet
+        }
     }
-
 
     private var header: some View {
         HStack {
@@ -176,9 +195,11 @@ struct HomeView: View {
                         HistoryRow(
                             iconBackground: Color.primaryGreen,
                             iconName: "text.bubble",
-                            text: conv.lastMessagePreview.isEmpty
-                                ? "Nouvelle conversation"
-                                : conv.lastMessagePreview
+                            text: displayText(for: conv),
+                            onMoreTapped: {
+                                selectedConversationID = conv.id
+                                showConversationOptions = true
+                            }
                         )
                     }
                     .buttonStyle(.plain)
@@ -187,6 +208,15 @@ struct HomeView: View {
         }
     }
 
+    private func displayText(for conv: Conversation) -> String {
+        if !conv.title.isEmpty {
+            return conv.title
+        } else if !conv.lastMessagePreview.isEmpty {
+            return conv.lastMessagePreview
+        } else {
+            return "Nouvelle conversation"
+        }
+    }
 
     private var menuSheet: some View {
         NavigationStack {
@@ -222,6 +252,81 @@ struct HomeView: View {
             .padding(20)
         }
         .presentationDetents([.height(220)])
+    }
+
+
+    private func prepareRename() {
+        guard let id = selectedConversationID,
+              let conv = chatStore.conversations.first(where: { $0.id == id }) else { return }
+
+        if !conv.title.isEmpty {
+            renameText = conv.title
+        } else if !conv.lastMessagePreview.isEmpty {
+            renameText = conv.lastMessagePreview
+        } else {
+            renameText = ""
+        }
+        showRenameSheet = true
+    }
+
+    private func deleteSelectedConversation() {
+        guard let id = selectedConversationID else { return }
+        chatStore.deleteConversation(id: id)
+        selectedConversationID = nil
+    }
+
+    private var renameSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Renommer la conversation")
+                    .font(.system(size: 20, weight: .semibold))
+                    .padding(.top, 12)
+
+                TextField("Titre de la conversation", text: $renameText)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color(white: 0.15))
+                    )
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Button {
+                    guard let id = selectedConversationID else {
+                        showRenameSheet = false
+                        return
+                    }
+                    chatStore.renameConversation(id: id, newTitle: renameText)
+                    showRenameSheet = false
+                } label: {
+                    Text("Enregistrer")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(Color.primaryGreen)
+                        )
+                }
+
+                Button(role: .cancel) {
+                    showRenameSheet = false
+                } label: {
+                    Text("Annuler")
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 46)
+                }
+            }
+            .padding(20)
+            .background(Color.black.ignoresSafeArea())
+        }
+        .presentationDetents([.height(260)])
     }
 }
 
@@ -272,6 +377,7 @@ struct HistoryRow: View {
     let iconBackground: Color
     let iconName: String
     let text: String
+    let onMoreTapped: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -292,8 +398,10 @@ struct HistoryRow: View {
 
             Spacer()
 
-            Image(systemName: "ellipsis")
-                .foregroundColor(.white.opacity(0.7))
+            Button(action: onMoreTapped) {
+                Image(systemName: "ellipsis")
+                    .foregroundColor(.white.opacity(0.7))
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
