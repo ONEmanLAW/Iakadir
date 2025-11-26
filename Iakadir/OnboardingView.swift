@@ -32,11 +32,12 @@ struct OnboardingView: View {
 
                 // BLOC CENTRAL : traits + glow + robot
                 ZStack {
-                    // Traits larges (proche de ta maquette 479 x 367)
+                    // ✅ Traits qui prennent toute la largeur de l’écran
                     Image("trait")
                         .resizable()
-                        .aspectRatio(479.12 / 367.41, contentMode: .fit)
-                        .frame(width: 340)
+                        .scaledToFill()
+                        .frame(width: UIScreen.main.bounds.width)
+                        .clipped()
 
                     // Glow vert derrière le robot
                     RadialGradient(
@@ -57,14 +58,15 @@ struct OnboardingView: View {
                         value: pulseGlow
                     )
 
-                    // Robot – flottement très léger
+                    // Robot – flottement très léger + un poil plus haut
                     Image("robotMain")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 140)
-                        .offset(y: robotFloat ? -6 : 6)   // 👉 amplitude très faible
+                        .offset(y: robotFloat ? -6 : 6)   // flottement léger
+                        .offset(y: -6)                    // léger décalage vers le haut
                         .animation(
-                            .easeInOut(duration: 2.4)      // 👉 mouvement lent, smooth
+                            .easeInOut(duration: 2.4)
                                 .repeatForever(autoreverses: true),
                             value: robotFloat
                         )
