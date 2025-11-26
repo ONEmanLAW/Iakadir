@@ -40,7 +40,7 @@ struct HistoryView: View {
                                     ChatView(conversationID: conv.id)
                                 } label: {
                                     HistoryRow(
-                                        iconBackground: Color.primaryGreen,
+                                        iconBackground: Color.primaryPurple,
                                         iconName: "text.bubble",
                                         text: displayText(for: conv),
                                         onMoreTapped: {
@@ -83,7 +83,6 @@ struct HistoryView: View {
 
     private var header: some View {
         ZStack {
-            // gros container arrondi + éventuel fond image plus tard
             RoundedRectangle(cornerRadius: 32)
                 .fill(Color.black)
                 .overlay(
@@ -118,7 +117,6 @@ struct HistoryView: View {
 
                 Spacer()
 
-                // placeholder pour équilibrer le HStack
                 Color.clear.frame(width: 40, height: 40)
             }
             .padding(.horizontal, 16)
