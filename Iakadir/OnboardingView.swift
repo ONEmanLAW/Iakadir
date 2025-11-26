@@ -107,7 +107,8 @@ struct OnboardingView: View {
                         }
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 70)   // ⬆️ avant 40, remonte le bloc texte + bouton
+                    .padding(.bottom, 70)
+                    .offset(y: -60)
                     .transition(.opacity)
                 }
             }
