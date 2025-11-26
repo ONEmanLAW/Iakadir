@@ -19,7 +19,7 @@ struct OnboardingView: View {
                 // "iakadir" – arrive après la splash
                 if showTextAndButton {
                     Text("iakadir")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(.black)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 10)
@@ -32,7 +32,7 @@ struct OnboardingView: View {
 
                 // BLOC CENTRAL : traits + glow + robot
                 ZStack {
-                    // ✅ Traits qui prennent toute la largeur de l’écran
+                    // Traits qui prennent toute la largeur de l’écran
                     Image("trait")
                         .resizable()
                         .scaledToFill()
@@ -86,7 +86,7 @@ struct OnboardingView: View {
                 if showTextAndButton {
                     VStack(spacing: 24) {
                         Text("Ton assistant IA,\nau quotidien.")
-                            .font(.system(size: 26, weight: .semibold))
+                            .font(.system(size: 30, weight: .semibold))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                             .frame(width: 306)
@@ -107,7 +107,7 @@ struct OnboardingView: View {
                         }
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 70)   // ⬆️ avant 40, remonte le bloc texte + bouton
                     .transition(.opacity)
                 }
             }
