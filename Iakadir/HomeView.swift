@@ -29,7 +29,7 @@ struct HomeView: View {
                 heroSection
 
                 historyHeader
-                historyList   // zone historique
+                historyList
 
                 Spacer()
             }
@@ -135,7 +135,6 @@ struct HomeView: View {
                     )
 
                     HStack(spacing: 16) {
-                        // Nouvelle conversation
                         NavigationLink {
                             ChatView(conversationID: nil)
                         } label: {
@@ -171,7 +170,7 @@ struct HomeView: View {
                 .font(.system(size: 20, weight: .semibold))
             Spacer()
             NavigationLink {
-                HistoryView()   // 👉 nouvel écran
+                HistoryView()
             } label: {
                 Text("Voir tout")
                     .foregroundColor(.white.opacity(0.6))
@@ -200,7 +199,7 @@ struct HomeView: View {
                         ChatView(conversationID: conv.id)
                     } label: {
                         HistoryRow(
-                            iconBackground: Color.primaryGreen,
+                            iconBackground: Color.primaryPurple,
                             iconName: "text.bubble",
                             text: displayText(for: conv),
                             onMoreTapped: {
@@ -213,7 +212,7 @@ struct HomeView: View {
                 }
             }
         }
-        .frame(height: 220, alignment: .top) // hauteur fixe pour garder la même DA
+        .frame(height: 220, alignment: .top)
     }
 
     private func displayText(for conv: Conversation) -> String {
@@ -393,7 +392,15 @@ struct HistoryRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ZstackIcon
+            ZStack {
+                Circle()
+                    .fill(iconBackground)
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: iconName)
+                    .foregroundColor(.black)
+                    .font(.system(size: 18, weight: .medium))
+            }
 
             Text(text)
                 .foregroundColor(.white)
@@ -405,7 +412,7 @@ struct HistoryRow: View {
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
                     .foregroundColor(.white.opacity(0.7))
-                    .padding(10)                  // zone cliquable élargie
+                    .padding(10)
                     .contentShape(Rectangle())
             }
         }
@@ -415,18 +422,6 @@ struct HistoryRow: View {
             RoundedRectangle(cornerRadius: 26)
                 .fill(Color.white.opacity(0.06))
         )
-    }
-
-    private var ZstackIcon: some View {
-        ZStack {
-            Circle()
-                .fill(iconBackground)
-                .frame(width: 40, height: 40)
-
-            Image(systemName: iconName)
-                .foregroundColor(.black)
-                .font(.system(size: 18, weight: .medium))
-        }
     }
 }
 
