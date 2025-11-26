@@ -16,10 +16,9 @@ struct OnboardingView: View {
             VStack {
                 Spacer().frame(height: 80)
 
-                // "iakadir" – arrive après la splash
                 if showTextAndButton {
-                    Text("iakadir")
-                        .font(.system(size: 22, weight: .semibold))
+                    Text("Iakadir")
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.black)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 10)
@@ -27,6 +26,7 @@ struct OnboardingView: View {
                             Capsule()
                                 .fill(Color.primaryGreen)
                         )
+                        .offset(y: 28)
                         .transition(.opacity)
                 }
 
