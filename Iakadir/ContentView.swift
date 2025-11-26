@@ -16,24 +16,23 @@ struct ContentView: View {
         NavigationStack {
             if let user = authViewModel.currentUser {
                 HomeView(username: user.username)
+                    .environmentObject(authViewModel)
+                    .environmentObject(chatStore)
             } else if hasStartedAuth {
                 LoginView(onBack: {
                     hasStartedAuth = false
                 })
+                .environmentObject(authViewModel)
             } else {
                 OnboardingView(onStart: {
                     hasStartedAuth = true
                 })
+                .environmentObject(authViewModel)
             }
         }
-        
-        .environmentObject(authViewModel)
-        .environmentObject(chatStore)
     }
 }
 
 #Preview {
     ContentView()
 }
-
-

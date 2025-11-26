@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  Iakadir
-//
-//  Created by digital on 19/11/2025.
-//
-
 import SwiftUI
 
 struct HomeView: View {
@@ -13,7 +6,6 @@ struct HomeView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var showMenu = false
 
-    // état pour le menu des trois points (sur les 3 dernières conv)
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
@@ -44,12 +36,8 @@ struct HomeView: View {
         .confirmationDialog("Options de la conversation",
                             isPresented: $showConversationOptions,
                             titleVisibility: .visible) {
-            Button("Renommer") {
-                prepareRename()
-            }
-            Button("Supprimer", role: .destructive) {
-                deleteSelectedConversation()
-            }
+            Button("Renommer") { prepareRename() }
+            Button("Supprimer", role: .destructive) { deleteSelectedConversation() }
             Button("Annuler", role: .cancel) {}
         }
         .sheet(isPresented: $showRenameSheet) {
@@ -86,36 +74,37 @@ struct HomeView: View {
 
             Spacer()
 
-            HStack(spacing: 6) {
-                Text("PRO")
-                    .font(.system(size: 13, weight: .semibold))
-                Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .bold))
+            NavigationLink {
+                PaywallView()
+            } label: {
+                HStack(spacing: 6) {
+                    Text("PRO")
+                        .font(.system(size: 13, weight: .semibold))
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .stroke(Color.primaryGreen, lineWidth: 1.5)
+                        .background(
+                            Capsule().fill(Color.white.opacity(0.05))
+                        )
+                )
+                .foregroundColor(.white)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .stroke(Color.primaryGreen, lineWidth: 1.5)
-                    .background(
-                        Capsule().fill(Color.white.opacity(0.05))
-                    )
-            )
-            .foregroundColor(.white)
         }
     }
 
-    // MARK: - Hero section
+    // MARK: - Hero
 
     private var heroSection: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 32)
                 .fill(
                     LinearGradient(
-                        colors: [
-                            Color.primaryGreen.opacity(0.45),
-                            Color.black
-                        ],
+                        colors: [Color.primaryGreen.opacity(0.45), Color.black],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -181,9 +170,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private var historyList: some View {
-        let sorted = chatStore.conversations
-            .sorted { $0.updatedAt > $1.updatedAt }
-
+        let sorted = chatStore.conversations.sorted { $0.updatedAt > $1.updatedAt }
         let topThree = Array(sorted.prefix(3))
 
         VStack(spacing: 12) {
@@ -263,7 +250,7 @@ struct HomeView: View {
         .presentationDetents([.height(220)])
     }
 
-    // MARK: - Actions rename/delete (home)
+    // MARK: - Rename / delete
 
     private func prepareRename() {
         guard let id = selectedConversationID,
@@ -337,10 +324,9 @@ struct HomeView: View {
             .background(Color.black.ignoresSafeArea())
         }
         .presentationDetents([.height(260)])
+
     }
 }
-
-// MARK: - Sous-vues
 
 struct ActionCard: View {
     let title: String
@@ -426,7 +412,9 @@ struct HistoryRow: View {
 }
 
 #Preview {
-    HomeView(username: "Ethan")
-        .environmentObject(AuthViewModel())
-        .environmentObject(ChatStore())
+    NavigationStack {
+        HomeView(username: "Ethan")
+            .environmentObject(AuthViewModel())
+            .environmentObject(ChatStore())
+    }
 }
