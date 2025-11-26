@@ -76,7 +76,7 @@ struct PaywallView: View {
                     Spacer()
 
                     Button {
-                        // flow "Déjà abonné ?" plus tard
+                        // on verra woulah
                     } label: {
                         Text("Déjà abonné ?")
                             .font(.system(size: 13, weight: .medium))
@@ -110,7 +110,6 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Titre + features
 
     private var titleAndFeaturesSection: some View {
         VStack(alignment: .leading, spacing: 16) {

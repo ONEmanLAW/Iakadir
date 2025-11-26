@@ -1,3 +1,10 @@
+//
+//  HomeView.swift
+//  Iakadir
+//
+//  Created by digital on 19/11/2025.
+//
+
 import SwiftUI
 
 struct HomeView: View {
@@ -74,25 +81,31 @@ struct HomeView: View {
 
             Spacer()
 
+            // Capsule PRO + icône premium-badge
             NavigationLink {
                 PaywallView()
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Text("PRO")
                         .font(.system(size: 13, weight: .semibold))
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+
+                    Image("premium-badge")
+                        .resizable()
+                        .renderingMode(.original)
+                        .scaledToFit()
+                        .frame(width: 26, height: 26)
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .stroke(Color.primaryGreen, lineWidth: 1.5)
-                        .background(
-                            Capsule().fill(Color.white.opacity(0.05))
+                        .fill(Color(red: 18/255, green: 18/255, blue: 36/255)) // fond sombre
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.primaryGreen, lineWidth: 1.5)
                         )
                 )
-                .foregroundColor(.white)
             }
         }
     }
@@ -324,9 +337,10 @@ struct HomeView: View {
             .background(Color.black.ignoresSafeArea())
         }
         .presentationDetents([.height(260)])
-
     }
 }
+
+// MARK: - Sous-vues
 
 struct ActionCard: View {
     let title: String
