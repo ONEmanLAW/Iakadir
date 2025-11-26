@@ -4,7 +4,7 @@ struct OnboardingView: View {
     let onStart: () -> Void
 
     @State private var showMainBlock = false        // apparition (opacity + léger zoom)
-    @State private var robotFloat = false           // rebond / flottement du robot
+    @State private var robotFloat = false           // flottement du robot (après les anims)
     @State private var pulseGlow = false            // glow qui pulse
     @State private var showTextAndButton = false    // texte "iakadir" + tagline + bouton
 
@@ -16,7 +16,7 @@ struct OnboardingView: View {
             VStack {
                 Spacer().frame(height: 80)
 
-                // "iakadir" – arrive après l’anim du bloc central
+                // "iakadir" – arrive après la splash
                 if showTextAndButton {
                     Text("iakadir")
                         .font(.system(size: 18, weight: .semibold))
@@ -36,7 +36,7 @@ struct OnboardingView: View {
                     Image("trait")
                         .resizable()
                         .aspectRatio(479.12 / 367.41, contentMode: .fit)
-                        .frame(width: 340) // ajuste à 360 si tu veux encore plus large
+                        .frame(width: 340)
 
                     // Glow vert derrière le robot
                     RadialGradient(
@@ -57,24 +57,24 @@ struct OnboardingView: View {
                         value: pulseGlow
                     )
 
-                    // Robot – rebond / flottement façon Wall-E
+                    // Robot – flottement très léger
                     Image("robotMain")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 140)
-                        .offset(y: robotFloat ? -12 : 12)
+                        .offset(y: robotFloat ? -6 : 6)   // 👉 amplitude très faible
                         .animation(
-                            .interpolatingSpring(stiffness: 120, damping: 10)
+                            .easeInOut(duration: 2.4)      // 👉 mouvement lent, smooth
                                 .repeatForever(autoreverses: true),
                             value: robotFloat
                         )
                 }
                 .padding(.top, 24)
-                // Apparition propre : au centre, pas de déplacement, juste opacity + léger zoom
+                // Apparition propre : au centre, opacity + léger zoom
                 .scaleEffect(showMainBlock ? 1.0 : 0.9)
                 .opacity(showMainBlock ? 1.0 : 0.0)
                 .animation(
-                    .easeOut(duration: 1.8),   // plus lent qu’avant
+                    .easeOut(duration: 1.8),
                     value: showMainBlock
                 )
 
@@ -111,18 +111,22 @@ struct OnboardingView: View {
             }
         }
         .onAppear {
-            // 1) Apparition du bloc central (traits + robot) – zoom très léger + fade
+            // 1) Apparition du bloc central (traits + robot) – léger zoom + fade
             showMainBlock = true
 
-            // 2) Lancement des animations continues
-            robotFloat = true
+            // 2) Glow commence direct (loop)
             pulseGlow = true
 
-            // 3) Ensuite seulement, apparition du texte + bouton
+            // 3) Après la splash, apparition du texte + bouton
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                 withAnimation(.easeInOut(duration: 0.8)) {
                     showTextAndButton = true
                 }
+            }
+
+            // 4) Quand tout le set d’anim est fini → on lance le flottement léger du robot
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+                robotFloat = true
             }
         }
     }
