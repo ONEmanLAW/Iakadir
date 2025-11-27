@@ -17,6 +17,10 @@ struct PaywallView: View {
 
     @State private var selectedPlan: BillingPlan = .weekly
     @State private var showAnimation = false
+    
+    // Animations robot + halo
+    @State private var glow = false
+    @State private var floatRobot = false
 
     var body: some View {
         ZStack {
@@ -25,8 +29,6 @@ struct PaywallView: View {
             VStack(spacing: 24) {
 
                 headerSection
-
-                titleAndFeaturesSection
 
                 plansSection
 
@@ -52,6 +54,7 @@ struct PaywallView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
+    // MARK: - Header
 
     private var headerSection: some View {
         ZStack {
@@ -65,9 +68,10 @@ struct PaywallView: View {
                         .clipped()
                         .offset(x: 40, y: -10)
                 )
-                .frame(height: 240)
+                .frame(height: 280)
 
             VStack {
+                // Top bar
                 HStack {
                     Button {
                         dismiss()
@@ -98,30 +102,55 @@ struct PaywallView: View {
                             )
                     }
                 }
-                .padding(.horizontal, 20)
                 .padding(.top, 16)
 
                 Spacer()
 
-                ZStack {
-                    Circle()
-                        .fill(Color.primaryGreen.opacity(0.5))
-                        .blur(radius: 40)
-                        .frame(width: 180, height: 180)
+                // Contenu centré dans l'image
+                VStack(spacing: 16) {
+                    ZStack {
+                        // Halo vert animé
+                        Circle()
+                            .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
+                            .frame(width: 180, height: 180)
+                            .blur(radius: 40)
+                            .scaleEffect(glow ? 1.05 : 0.95)
+                            .animation(
+                                .easeInOut(duration: 1.8)
+                                    .repeatForever(autoreverses: true),
+                                value: glow
+                            )
 
-                    Image("robotMain")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 90)
+                        // Robot qui flotte
+                        Image("robotMain")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 90)
+                            .offset(y: floatRobot ? -8 : 8)
+                            .animation(
+                                .easeInOut(duration: 2)
+                                    .repeatForever(autoreverses: true),
+                                value: floatRobot
+                            )
+                    }
+                    .onAppear {
+                        glow = true
+                        floatRobot = true
+                    }
+
+                    titleAndFeaturesSection
                 }
-                .padding(.bottom, 12)
+
+                Spacer()
             }
+            .padding(.horizontal, 20)
         }
     }
 
+    // MARK: - Titre + features (bloc centré, icônes alignées à gauche)
 
     private var titleAndFeaturesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(spacing: 16) {
             HStack(spacing: 6) {
                 Text("iakadir")
                     .foregroundColor(.white)
@@ -131,6 +160,8 @@ struct PaywallView: View {
                     .font(.system(size: 26, weight: .semibold))
             }
 
+            // 👉 Les FeatureRow sont alignées en .leading,
+            // donc la colonne d’icônes reste parfaitement droite.
             VStack(alignment: .leading, spacing: 10) {
                 FeatureRow(icon: "sparkles", text: "Access to all features")
                 FeatureRow(icon: "brain.head.profile", text: "Powered by ChatGPT-4")
@@ -138,7 +169,8 @@ struct PaywallView: View {
                 FeatureRow(icon: "doc.text.magnifyingglass", text: "More detailed answers")
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // Le bloc complet est centré dans le header
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     // MARK: - Plans
@@ -238,12 +270,10 @@ struct PaywallView: View {
 
     private var continueButton: some View {
         Button {
-            // On lance l'anim + timer pour la cacher
             withAnimation(.easeInOut(duration: 0.25)) {
                 showAnimation = true
             }
 
-            // Durée de ton Lottie (ajuste 2.0 en fonction de la vraie durée)
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     showAnimation = false
@@ -298,12 +328,16 @@ struct FeatureRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // 👉 Colonne d’icônes bien droite
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(Color.primaryGreen)
+                .frame(width: 22, alignment: .center)
+
             Text(text)
                 .font(.system(size: 14))
                 .foregroundColor(.white)
+                .multilineTextAlignment(.leading)
         }
     }
 }
