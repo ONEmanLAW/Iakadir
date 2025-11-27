@@ -8,6 +8,8 @@ struct OnboardingView: View {
     @State private var pulseGlow = false            // glow qui pulse
     @State private var showTextAndButton = false    // texte "iakadir" + tagline + bouton
 
+    @State private var isExiting = false            // fade out avant d’aller au login
+
     var body: some View {
         ZStack {
             Color.black
@@ -93,7 +95,18 @@ struct OnboardingView: View {
                             .padding(.horizontal, 32)
 
                         Button {
-                            onStart()
+                            // 1) jouer le son une seule fois
+                            SoundManager.shared.playStartSound()
+
+                            // 2) lancer le fade out
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                isExiting = true
+                            }
+
+                            // 3) après le fade out, appeler onStart() pour passer au Login
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                onStart()
+                            }
                         } label: {
                             Text("Commencer")
                                 .font(.system(size: 17, weight: .semibold))
@@ -112,6 +125,8 @@ struct OnboardingView: View {
                     .transition(.opacity)
                 }
             }
+            // Fade out global avant de changer d’écran
+            .opacity(isExiting ? 0 : 1)
         }
         .onAppear {
             // 1) Apparition du bloc central (traits + robot) – léger zoom + fade

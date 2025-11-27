@@ -13,9 +13,12 @@ struct LoginView: View {
 
     @State private var showPassword = false
     
-    // 🔥 États pour les animatios
+    // 🔥 États pour les animations
     @State private var glow = false
     @State private var floatRobot = false
+
+    // Apparition fluide de la page
+    @State private var didAppear = false
 
     var body: some View {
         ZStack {
@@ -23,6 +26,7 @@ struct LoginView: View {
 
             VStack(alignment: .leading, spacing: 24) {
 
+                // HEADER
                 HStack {
                     Button {
                         onBack()
@@ -34,7 +38,11 @@ struct LoginView: View {
                     Spacer()
                 }
                 .padding(.top, 16)
+                .opacity(didAppear ? 1 : 0)
+                .offset(y: didAppear ? 0 : -10)
+                .animation(.easeOut(duration: 0.4), value: didAppear)
 
+                // BLOC ROBOT + TITRES
                 VStack(spacing: 16) {
                     ZStack {
                         // 🌟 Halo vert qui pulse
@@ -88,7 +96,11 @@ struct LoginView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
+                .opacity(didAppear ? 1 : 0)
+                .offset(y: didAppear ? 0 : 10)
+                .animation(.easeOut(duration: 0.45).delay(0.05), value: didAppear)
 
+                // FORMULAIRE
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
                         Image(systemName: "envelope")
@@ -137,44 +149,53 @@ struct LoginView: View {
                     )
                 }
                 .padding(.top, 8)
+                .opacity(didAppear ? 1 : 0)
+                .offset(y: didAppear ? 0 : 20)
+                .animation(.easeOut(duration: 0.5).delay(0.1), value: didAppear)
 
-                Button {
-                    // plus tard reset mot de passe
-                } label: {
-                    Text("Mot de passe oublié ?")
-                        .font(.system(size: 13))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .padding(.top, 4)
-
-                if let error = auth.errorMessage {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.system(size: 13))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 4)
-                }
-
-                Button {
-                    Task { await auth.login() }
-                } label: {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(Color.white)
-
-                        if auth.isLoading {
-                            ProgressView()
-                        } else {
-                            Text("Me connecter")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.black)
-                        }
+                // LIEN + ERREUR + BOUTON
+                VStack(spacing: 8) {
+                    Button {
+                        // plus tard reset mot de passe
+                    } label: {
+                        Text("Mot de passe oublié ?")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    .frame(height: 66)
+                    .padding(.top, 4)
+
+                    if let error = auth.errorMessage {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.system(size: 13))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 4)
+                    }
+
+                    Button {
+                        Task { await auth.login() }
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(Color.white)
+
+                            if auth.isLoading {
+                                ProgressView()
+                            } else {
+                                Text("Me connecter")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.black)
+                            }
+                        }
+                        .frame(height: 66)
+                    }
+                    .padding(.top, 8)
                 }
-                .padding(.top, 16)
+                .opacity(didAppear ? 1 : 0)
+                .offset(y: didAppear ? 0 : 20)
+                .animation(.easeOut(duration: 0.5).delay(0.15), value: didAppear)
 
                 Spacer()
             }
@@ -182,6 +203,12 @@ struct LoginView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            // déclenche l’animation d’entrée une seule fois
+            if !didAppear {
+                didAppear = true
+            }
+        }
     }
 }
 
