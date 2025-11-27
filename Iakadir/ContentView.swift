@@ -27,13 +27,10 @@ struct ContentView: View {
         }
     }
 
-    /// Sync le ChatStore avec l'utilisateur courant
     private func syncChatStore(with id: UUID?) {
         if let id = id {
-            // UUID -> String
             chatStore.setUserID(id.uuidString)
         } else {
-            // pas d'utilisateur connecté (ou déconnexion)
             chatStore.setUserID(nil)
         }
     }
