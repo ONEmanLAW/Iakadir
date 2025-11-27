@@ -287,4 +287,3 @@ struct ActionChip: View {
             .environmentObject(ChatStore())
     }
 }
-

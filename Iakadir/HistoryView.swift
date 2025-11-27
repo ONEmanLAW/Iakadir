@@ -20,7 +20,7 @@ struct HistoryView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
 
                 header
 
@@ -33,7 +33,8 @@ struct HistoryView: View {
                             Text("Aucune conversation pour l’instant.")
                                 .foregroundColor(.white.opacity(0.5))
                                 .font(.system(size: 14))
-                                .padding(.top, 24)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 8)
                         } else {
                             ForEach(sorted) { conv in
                                 NavigationLink {
@@ -55,23 +56,17 @@ struct HistoryView: View {
                     }
                     .padding(.top, 8)
                 }
-
-                Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)
-            .padding(.top, 16)
+            .padding(.top, 24)
             .padding(.bottom, 16)
         }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Options de la conversation",
                             isPresented: $showConversationOptions,
                             titleVisibility: .visible) {
-            Button("Renommer") {
-                prepareRename()
-            }
-            Button("Supprimer", role: .destructive) {
-                deleteSelectedConversation()
-            }
+            Button("Renommer") { prepareRename() }
+            Button("Supprimer", role: .destructive) { deleteSelectedConversation() }
             Button("Annuler", role: .cancel) {}
         }
         .sheet(isPresented: $showRenameSheet) {
@@ -82,49 +77,33 @@ struct HistoryView: View {
     // MARK: - Header
 
     private var header: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 32)
-                .fill(Color.black)
-                .overlay(
-                    Image("splashBackground")
-                        .resizable()
-                        .scaledToFill()
-                        .opacity(0.25)
-                        .clipped()
-                )
-                .frame(height: 140)
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: 40, height: 40)
 
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.08))
-                            .frame(width: 40, height: 40)
-
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                    }
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
                 }
-
-                Spacer()
-
-                Text("Historique")
-                    .foregroundColor(.white)
-                    .font(.system(size: 22, weight: .semibold))
-
-                Spacer()
-
-                Color.clear.frame(width: 40, height: 40)
             }
-            .padding(.horizontal, 16)
-        }
-        .padding(.bottom, 8)
-    }
 
-    // MARK: - Helpers
+            Spacer()
+
+            Text("Historique")
+                .foregroundColor(.white)
+                .font(.system(size: 22, weight: .semibold))
+
+            Spacer()
+
+            // petit spacer pour équilibrer visuellement le header
+            Color.clear.frame(width: 40, height: 40)
+        }
+    }
 
     private func displayText(for conv: Conversation) -> String {
         if !conv.title.isEmpty {
@@ -135,6 +114,8 @@ struct HistoryView: View {
             return "Nouvelle conversation"
         }
     }
+
+    // MARK: - Rename / delete
 
     private func prepareRename() {
         guard let id = selectedConversationID,
@@ -214,6 +195,6 @@ struct HistoryView: View {
 #Preview {
     NavigationStack {
         HistoryView()
-            .environmentObject(ChatStore())
+            .environmentObject(ChatStore())   // ✅ fournit l’EnvironmentObject
     }
 }
