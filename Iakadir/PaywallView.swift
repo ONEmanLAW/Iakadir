@@ -46,7 +46,7 @@ struct PaywallView: View {
                 Color.black.ignoresSafeArea()
 
                 LottieView(name: "sparkles-paywall", loopMode: .playOnce)
-                    .frame(width: 350, height: 350)
+                    .frame(width: 380, height: 380)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
