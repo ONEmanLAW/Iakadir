@@ -173,7 +173,16 @@ struct RegisterView: View {
                 }
 
                 Button {
-                    Task { await auth.register() }
+                    Task {
+                        await auth.register()
+
+                        // ✅ Si inscription + login OK → currentUser ≠ nil
+                        if auth.currentUser != nil {
+                            // Optionnel : on ferme cette vue (de toute façon
+                            // ContentView basculera sur HomeView)
+                            dismiss()
+                        }
+                    }
                 } label: {
                     ZStack {
                         RoundedRectangle(cornerRadius: 24)

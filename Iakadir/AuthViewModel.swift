@@ -37,7 +37,8 @@ class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var currentUser: AppUser?
 
-    // INSCRIPTION
+    // MARK: - INSCRIPTION
+
     func register() async {
         guard !email.isEmpty, !password.isEmpty, !username.isEmpty else {
             errorMessage = "Complète tous les champs."
@@ -46,24 +47,28 @@ class AuthViewModel: ObservableObject {
 
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
+            // 1) Création du compte Supabase
             try await supabase.auth.signUp(
                 email: email,
                 password: password
             )
 
+            // 2) Connexion automatique
             try await supabase.auth.signIn(
                 email: email,
                 password: password
             )
 
+            // 3) Récupération de l’utilisateur courant
             guard let authUser = supabase.auth.currentUser else {
                 errorMessage = "Impossible de récupérer la session après l'inscription."
-                isLoading = false
                 return
             }
 
+            // 4) Création du profil dans la table "profiles"
             let insert = ProfileInsert(
                 id: authUser.id,
                 username: username,
@@ -75,19 +80,23 @@ class AuthViewModel: ObservableObject {
                 .insert(insert)
                 .execute()
 
+            // 5) Mise à jour de l'utilisateur courant de l'app
             currentUser = AppUser(
                 id: authUser.id,
                 email: email,
                 username: username
             )
 
+            // (optionnel) tu peux vider les champs si tu veux
+            // self.password = ""
+            // self.username = ""
+
         } catch {
             errorMessage = error.localizedDescription
         }
-
-        isLoading = false
     }
 
+    // MARK: - CONNEXION
 
     func login() async {
         guard !email.isEmpty, !password.isEmpty else {
@@ -97,6 +106,7 @@ class AuthViewModel: ObservableObject {
 
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
             try await supabase.auth.signIn(
@@ -106,7 +116,6 @@ class AuthViewModel: ObservableObject {
 
             guard let authUser = supabase.auth.currentUser else {
                 errorMessage = "Session introuvable après la connexion."
-                isLoading = false
                 return
             }
 
@@ -130,11 +139,10 @@ class AuthViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
-
-        isLoading = false
     }
 
-    
+    // MARK: - DÉCONNEXION
+
     func logout() async {
         do {
             try await supabase.auth.signOut()
@@ -149,6 +157,3 @@ class AuthViewModel: ObservableObject {
         errorMessage = nil
     }
 }
-
-
-

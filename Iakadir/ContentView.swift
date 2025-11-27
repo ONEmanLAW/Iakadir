@@ -8,10 +8,9 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             if let user = authViewModel.currentUser {
-                // Utilisateur connecté → Home
+                
                 HomeView(username: user.username)
             } else if hasStartedAuth {
-                // L'utilisateur a cliqué sur "Commencer" → écran de login
                 LoginView(onBack: {
                     hasStartedAuth = false
                 })
@@ -22,7 +21,7 @@ struct ContentView: View {
                 })
             }
         }
-        // iOS 17 : nouvelle version de onChange (old, new) + initial
+        
         .onChange(of: authViewModel.currentUser?.id, initial: true) { _, newID in
             syncChatStore(with: newID)
         }
