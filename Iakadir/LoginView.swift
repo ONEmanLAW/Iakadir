@@ -12,6 +12,10 @@ struct LoginView: View {
     let onBack: () -> Void
 
     @State private var showPassword = false
+    
+    // 🔥 États pour les animations
+    @State private var glow = false
+    @State private var floatRobot = false
 
     var body: some View {
         ZStack {
@@ -33,15 +37,34 @@ struct LoginView: View {
 
                 VStack(spacing: 16) {
                     ZStack {
+                        // 🌟 Halo vert qui pulse
                         Circle()
-                            .fill(Color.primaryGreen.opacity(0.7))
+                            .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
                             .frame(width: 160, height: 160)
                             .blur(radius: 60)
+                            .scaleEffect(glow ? 1.05 : 0.95)
+                            .animation(
+                                .easeInOut(duration: 1.8)
+                                    .repeatForever(autoreverses: true),
+                                value: glow
+                            )
 
+                        // 🤖 Robot qui “vole”
                         Image("robotMain")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 80)
+                            .offset(y: floatRobot ? -8 : 8)
+                            .animation(
+                                .easeInOut(duration: 2)
+                                    .repeatForever(autoreverses: true),
+                                value: floatRobot
+                            )
+                    }
+                    // Lance les animations
+                    .onAppear {
+                        glow = true
+                        floatRobot = true
                     }
 
                     Text("Connecte-toi")
@@ -168,4 +191,3 @@ struct LoginView: View {
             .environmentObject(AuthViewModel())
     }
 }
-
