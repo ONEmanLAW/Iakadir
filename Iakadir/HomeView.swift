@@ -11,8 +11,8 @@ struct HomeView: View {
     let username: String
     @EnvironmentObject var auth: AuthViewModel
     @EnvironmentObject var chatStore: ChatStore
-    @State private var showMenu = false
 
+    @State private var showMenu = false
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
@@ -55,7 +55,8 @@ struct HomeView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Bouton menu
             Button {
                 showMenu = true
             } label: {
@@ -70,8 +71,7 @@ struct HomeView: View {
                 }
             }
 
-            Spacer()
-
+            // Hello + emoji
             HStack(spacing: 4) {
                 Text("Hello, \(username)")
                     .foregroundColor(.white)
@@ -79,7 +79,7 @@ struct HomeView: View {
                 Text("👋")
             }
 
-            Spacer()
+            Spacer()    // pousse uniquement PRO à droite
 
             // Capsule PRO + icône premium-badge
             NavigationLink {
@@ -87,26 +87,26 @@ struct HomeView: View {
             } label: {
                 HStack(spacing: 8) {
                     Text("PRO")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
 
                     Image("premium-badge")
-                        .resizable()
-                        .renderingMode(.original)
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 18, height: 18)
+                        .frame(width: 8, height: 8)
+                        .offset(y: 75)
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.vertical, 6)
                 .background(
                     Capsule()
-                        .fill(Color(red: 18/255, green: 18/255, blue: 36/255)) // fond sombre
+                        .fill(Color(red: 18/255, green: 18/255, blue: 36/255))
                         .overlay(
                             Capsule()
                                 .stroke(Color.primaryGreen, lineWidth: 1.5)
                         )
                 )
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -427,7 +427,7 @@ struct HistoryRow: View {
 
 #Preview {
     NavigationStack {
-        HomeView(username: "Hugo")
+        HomeView(username: "Ethan")
             .environmentObject(AuthViewModel())
             .environmentObject(ChatStore())
     }
