@@ -16,6 +16,7 @@ struct PaywallView: View {
     }
 
     @State private var selectedPlan: BillingPlan = .weekly
+    @State private var showAnimation = false
 
     var body: some View {
         ZStack {
@@ -38,11 +39,19 @@ struct PaywallView: View {
             .padding(.horizontal, 20)
             .padding(.top, 12)
             .padding(.bottom, 8)
+            .opacity(showAnimation ? 0 : 1)
+            .animation(.easeInOut(duration: 0.25), value: showAnimation)
+
+            if showAnimation {
+                Color.black.ignoresSafeArea()
+
+                LottieView(name: "sparkles-paywall", loopMode: .playOnce)
+                    .frame(width: 350, height: 350)
+            }
         }
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    // MARK: - Header
 
     private var headerSection: some View {
         ZStack {
@@ -76,7 +85,7 @@ struct PaywallView: View {
                     Spacer()
 
                     Button {
-                        // on verra woulah
+                        // plus tard : restauration d’achats
                     } label: {
                         Text("Déjà abonné ?")
                             .font(.system(size: 13, weight: .medium))
@@ -229,7 +238,17 @@ struct PaywallView: View {
 
     private var continueButton: some View {
         Button {
-            // plus tard : RevenueCat / achat selon selectedPlan
+            // On lance l'anim + timer pour la cacher
+            withAnimation(.easeInOut(duration: 0.25)) {
+                showAnimation = true
+            }
+
+            // Durée de ton Lottie (ajuste 2.0 en fonction de la vraie durée)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showAnimation = false
+                }
+            }
         } label: {
             Text("Continuer")
                 .font(.system(size: 17, weight: .semibold))
@@ -241,6 +260,7 @@ struct PaywallView: View {
                         .fill(Color.primaryGreen)
                 )
         }
+        .disabled(showAnimation)
     }
 
     // MARK: - Footer
@@ -269,6 +289,8 @@ struct PaywallView: View {
         .padding(.bottom, 4)
     }
 }
+
+// MARK: - Feature row
 
 struct FeatureRow: View {
     let icon: String

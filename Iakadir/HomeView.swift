@@ -93,8 +93,8 @@ struct HomeView: View {
                     Image("premium-badge")
                         .resizable()
                         .renderingMode(.original)
-                        .scaledToFit()
-                        .frame(width: 26, height: 26)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 18, height: 18)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
@@ -427,7 +427,7 @@ struct HistoryRow: View {
 
 #Preview {
     NavigationStack {
-        HomeView(username: "Ethan")
+        HomeView(username: "Hugo")
             .environmentObject(AuthViewModel())
             .environmentObject(ChatStore())
     }
