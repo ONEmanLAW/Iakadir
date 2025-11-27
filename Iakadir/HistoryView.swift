@@ -195,6 +195,6 @@ struct HistoryView: View {
 #Preview {
     NavigationStack {
         HistoryView()
-            .environmentObject(ChatStore())   // ✅ fournit l’EnvironmentObject
+            .environmentObject(ChatStore(userID: "preview-user"))
     }
 }

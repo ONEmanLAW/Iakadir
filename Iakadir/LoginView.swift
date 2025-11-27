@@ -13,7 +13,7 @@ struct LoginView: View {
 
     @State private var showPassword = false
     
-    // 🔥 États pour les animations
+    // 🔥 États pour les animatios
     @State private var glow = false
     @State private var floatRobot = false
 

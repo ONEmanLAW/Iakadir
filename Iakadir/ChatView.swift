@@ -284,6 +284,7 @@ struct ActionChip: View {
 #Preview {
     NavigationStack {
         ChatView(conversationID: nil)
-            .environmentObject(ChatStore())
+            .environmentObject(ChatStore(userID: "preview-user"))
     }
 }
+

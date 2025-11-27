@@ -429,6 +429,7 @@ struct HistoryRow: View {
     NavigationStack {
         HomeView(username: "Ethan")
             .environmentObject(AuthViewModel())
-            .environmentObject(ChatStore())
+            .environmentObject(ChatStore(userID: "preview-user"))
     }
 }
+
