@@ -10,7 +10,12 @@ import SwiftUI
 struct RegisterView: View {
     @EnvironmentObject var auth: AuthViewModel
     @Environment(\.dismiss) private var dismiss
+    
     @State private var showPassword = false
+    
+    // 🔥 États pour les animations (mêmes que sur LoginView)
+    @State private var glow = false
+    @State private var floatRobot = false
 
     var body: some View {
         ZStack {
@@ -32,15 +37,33 @@ struct RegisterView: View {
 
                 VStack(spacing: 16) {
                     ZStack {
+                        // 🌟 Halo vert animé
                         Circle()
-                            .fill(Color.primaryGreen.opacity(0.7))
+                            .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
                             .frame(width: 160, height: 160)
                             .blur(radius: 60)
+                            .scaleEffect(glow ? 1.05 : 0.95)
+                            .animation(
+                                .easeInOut(duration: 1.8)
+                                    .repeatForever(autoreverses: true),
+                                value: glow
+                            )
 
+                        // 🤖 Robot qui flotte
                         Image("robotMain")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 80)
+                            .offset(y: floatRobot ? -8 : 8)
+                            .animation(
+                                .easeInOut(duration: 2)
+                                    .repeatForever(autoreverses: true),
+                                value: floatRobot
+                            )
+                    }
+                    .onAppear {
+                        glow = true
+                        floatRobot = true
                     }
 
                     Text("Inscris-toi")
@@ -183,6 +206,3 @@ struct RegisterView: View {
             .environmentObject(AuthViewModel())
     }
 }
-
-
-
