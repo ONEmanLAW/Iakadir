@@ -30,11 +30,13 @@ struct HomeView: View {
                 historyHeader
                 historyList
 
-                Spacer()
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 20)
+            // 🔻 moins de padding sur les côtés pour donner plus de largeur aux cartes
+            .padding(.horizontal, 14)
             .padding(.top, 24)
-            .padding(.bottom, 16)
+            // 🔻 très peu d’espace sous l’historique
+            .padding(.bottom, 2)
         }
         .sheet(isPresented: $showMenu) {
             menuSheet
@@ -56,7 +58,6 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            // Bouton menu (gauche)
             Button {
                 showMenu = true
             } label: {
@@ -73,7 +74,6 @@ struct HomeView: View {
 
             Spacer()
 
-            // Hello centré
             HStack(spacing: 4) {
                 Text("Hello, \(username)")
                     .foregroundColor(.white)
@@ -83,7 +83,6 @@ struct HomeView: View {
 
             Spacer()
 
-            // Capsule PRO : texte à gauche, icône à droite
             NavigationLink {
                 PaywallView()
             } label: {
@@ -111,50 +110,55 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Hero
+    // MARK: - Hero (cartes chat)
 
     private var heroSection: some View {
-        // On réduit la hauteur des cartes pour laisser mieux respirer le titre
         let smallHeight: CGFloat = 110
         let verticalSpacing: CGFloat = 12
         let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
 
-        return VStack(alignment: .leading, spacing: 20) {
-            // Plus de place pour le titre
+        return VStack(alignment: .leading, spacing: 60) {
+            // ➕ plus d’espace entre header et titre
             Text("Qu’est-ce que tu\nveux faire ?")
                 .foregroundColor(.white)
                 .font(.system(size: 28, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 4)
+                .padding(.top, 10)
 
-            HStack(spacing: 14) {
-                // Gauche : gros bloc “Parler à l’IA”
-                NavigationLink {
-                    ChatView(conversationID: nil)
-                } label: {
-                    ActionCard(
-                        title: "Parler à l’IA",
-                        iconName: "text.bubble",
-                        background: Color(red: 0.80, green: 0.75, blue: 1.0),
-                        height: bigHeight
-                    )
-                }
-                .buttonStyle(.plain)
+            // ➕ plus d’espace entre le titre et les cartes de chat (spacing: 60)
+            HStack(alignment: .top, spacing: 8) {
 
-                // Droite : deux cartes empilées
+                // GAUCHE : grosse carte "Résumer un son"
+                ActionCard(
+                    title: "Résumer un son",
+                    iconName: "ear.badge.waveform",
+                    background: Color.primaryGreen,
+                    height: bigHeight,
+                    titleFontSize: 20
+                )
+
+                // DROITE : deux cartes empilées
                 VStack(spacing: verticalSpacing) {
+
+                    NavigationLink {
+                        ChatView(conversationID: nil)
+                    } label: {
+                        ActionCard(
+                            title: "Parler à l’IA",
+                            iconName: "text.bubble",
+                            background: Color(red: 0.80, green: 0.75, blue: 1.0),
+                            height: smallHeight,
+                            titleFontSize: 18
+                        )
+                    }
+                    .buttonStyle(.plain)
+
                     ActionCard(
                         title: "Générer une image",
                         iconName: "photo.on.rectangle",
                         background: Color.lightPink,
-                        height: smallHeight
-                    )
-
-                    ActionCard(
-                        title: "Résumer un son",
-                        iconName: "ear.badge.waveform",
-                        background: Color.primaryGreen,
-                        height: smallHeight
+                        height: smallHeight,
+                        titleFontSize: 18
                     )
                 }
             }
@@ -184,7 +188,7 @@ struct HomeView: View {
         let sorted = chatStore.conversations.sorted { $0.updatedAt > $1.updatedAt }
         let topThree = Array(sorted.prefix(3))
 
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             if topThree.isEmpty {
                 Text("Aucune conversation pour l’instant.")
                     .foregroundColor(.white.opacity(0.5))
@@ -210,7 +214,6 @@ struct HomeView: View {
                 }
             }
         }
-        // ❌ plus de hauteur fixe → il prend juste la place nécessaire
     }
 
     private func displayText(for conv: Conversation) -> String {
@@ -345,6 +348,7 @@ struct ActionCard: View {
     let iconName: String
     let background: Color
     let height: CGFloat
+    var titleFontSize: CGFloat = 18
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -353,7 +357,6 @@ struct ActionCard: View {
                     Circle()
                         .fill(Color.black.opacity(0.12))
                         .frame(width: 36, height: 36)
-
                     Image(systemName: iconName)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.black)
@@ -368,11 +371,13 @@ struct ActionCard: View {
 
             Text(title)
                 .foregroundColor(.black)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: titleFontSize, weight: .semibold))
                 .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(1)                    // ✅ jamais sur 2 lignes
+                .minimumScaleFactor(0.85)        // réduit un peu la taille si besoin
         }
-        .padding(16)
+        // 🔻 padding interne légèrement réduit pour gagner de la largeur
+        .padding(14)
         .frame(maxWidth: .infinity)
         .frame(height: height)
         .background(
@@ -389,7 +394,7 @@ struct HistoryRow: View {
     let onMoreTapped: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             ZStack {
                 Circle()
                     .fill(iconBackground)
@@ -410,16 +415,17 @@ struct HistoryRow: View {
 
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
-                    .rotationEffect(.degrees(90))   // imitation vertical
+                    .rotationEffect(.degrees(90))
                     .foregroundColor(.white.opacity(0.7))
-                    .padding(10)
+                    .padding(6)
                     .contentShape(Rectangle())
             }
         }
-        .padding(.horizontal, 16)
+        // 🔻 padding latéral réduit pour gagner un peu de largeur
+        .padding(.horizontal, 8)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 26)
+            RoundedRectangle(cornerRadius: 24)
                 .fill(Color.white.opacity(0.06))
         )
     }
