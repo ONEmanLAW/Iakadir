@@ -56,7 +56,7 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            // Bouton menu
+            // Bouton menu (gauche)
             Button {
                 showMenu = true
             } label: {
@@ -71,7 +71,9 @@ struct HomeView: View {
                 }
             }
 
-            // Hello + emoji
+            Spacer()
+
+            // Hello centré
             HStack(spacing: 4) {
                 Text("Hello, \(username)")
                     .foregroundColor(.white)
@@ -79,21 +81,20 @@ struct HomeView: View {
                 Text("👋")
             }
 
-            Spacer()    // pousse uniquement PRO à droite
+            Spacer()
 
-            // Capsule PRO + icône premium-badge
+            // Capsule PRO : texte à gauche, icône à droite
             NavigationLink {
                 PaywallView()
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Text("PRO")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
 
-                    Image("premium-badge")
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 8, height: 8)
-                        .offset(y: 75)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.primaryGreen)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 6)
@@ -113,54 +114,51 @@ struct HomeView: View {
     // MARK: - Hero
 
     private var heroSection: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 32)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.primaryGreen.opacity(0.45), Color.black],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+        // On réduit la hauteur des cartes pour laisser mieux respirer le titre
+        let smallHeight: CGFloat = 110
+        let verticalSpacing: CGFloat = 12
+        let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
 
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Qu’est-ce que tu\nveux faire ?")
-                    .foregroundColor(.white)
-                    .font(.system(size: 28, weight: .semibold))
+        return VStack(alignment: .leading, spacing: 20) {
+            // Plus de place pour le titre
+            Text("Qu’est-ce que tu\nveux faire ?")
+                .foregroundColor(.white)
+                .font(.system(size: 28, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
 
-                VStack(spacing: 16) {
+            HStack(spacing: 14) {
+                // Gauche : gros bloc “Parler à l’IA”
+                NavigationLink {
+                    ChatView(conversationID: nil)
+                } label: {
                     ActionCard(
-                        title: "Résumer\nun son",
+                        title: "Parler à l’IA",
+                        iconName: "text.bubble",
+                        background: Color(red: 0.80, green: 0.75, blue: 1.0),
+                        height: bigHeight
+                    )
+                }
+                .buttonStyle(.plain)
+
+                // Droite : deux cartes empilées
+                VStack(spacing: verticalSpacing) {
+                    ActionCard(
+                        title: "Générer une image",
+                        iconName: "photo.on.rectangle",
+                        background: Color.lightPink,
+                        height: smallHeight
+                    )
+
+                    ActionCard(
+                        title: "Résumer un son",
                         iconName: "ear.badge.waveform",
                         background: Color.primaryGreen,
-                        isLarge: true
+                        height: smallHeight
                     )
-
-                    HStack(spacing: 16) {
-                        NavigationLink {
-                            ChatView(conversationID: nil)
-                        } label: {
-                            ActionCard(
-                                title: "Parler à l’IA",
-                                iconName: "text.bubble",
-                                background: Color(red: 0.80, green: 0.75, blue: 1.0),
-                                isLarge: false
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        ActionCard(
-                            title: "Générer une image",
-                            iconName: "photo.on.rectangle",
-                            background: Color.lightPink,
-                            isLarge: false
-                        )
-                    }
                 }
             }
-            .padding(20)
         }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Historique
@@ -186,13 +184,13 @@ struct HomeView: View {
         let sorted = chatStore.conversations.sorted { $0.updatedAt > $1.updatedAt }
         let topThree = Array(sorted.prefix(3))
 
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             if topThree.isEmpty {
                 Text("Aucune conversation pour l’instant.")
                     .foregroundColor(.white.opacity(0.5))
                     .font(.system(size: 14))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
+                    .padding(.top, 4)
             } else {
                 ForEach(topThree) { conv in
                     NavigationLink {
@@ -212,7 +210,7 @@ struct HomeView: View {
                 }
             }
         }
-        .frame(height: 220, alignment: .top)
+        // ❌ plus de hauteur fixe → il prend juste la place nécessaire
     }
 
     private func displayText(for conv: Conversation) -> String {
@@ -346,41 +344,41 @@ struct ActionCard: View {
     let title: String
     let iconName: String
     let background: Color
-    let isLarge: Bool
+    let height: CGFloat
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 28)
-                .fill(background)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(Color.black.opacity(0.12))
+                        .frame(width: 36, height: 36)
 
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color.black.opacity(0.12))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: iconName)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.black)
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 14, weight: .semibold))
+                    Image(systemName: iconName)
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.black)
                 }
-
-                Text(title)
-                    .foregroundColor(.black)
-                    .font(.system(size: 18, weight: .semibold))
-                    .multilineTextAlignment(.leading)
-
                 Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.black)
             }
-            .padding(16)
+
+            Spacer()
+
+            Text(title)
+                .foregroundColor(.black)
+                .font(.system(size: 18, weight: .semibold))
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(16)
         .frame(maxWidth: .infinity)
-        .frame(height: isLarge ? 180 : 120)
+        .frame(height: height)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(background)
+        )
     }
 }
 
@@ -405,12 +403,14 @@ struct HistoryRow: View {
             Text(text)
                 .foregroundColor(.white)
                 .font(.system(size: 15))
-                .lineLimit(1)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
 
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
+                    .rotationEffect(.degrees(90))   // imitation vertical
                     .foregroundColor(.white.opacity(0.7))
                     .padding(10)
                     .contentShape(Rectangle())
@@ -432,4 +432,3 @@ struct HistoryRow: View {
             .environmentObject(ChatStore(userID: "preview-user"))
     }
 }
-
