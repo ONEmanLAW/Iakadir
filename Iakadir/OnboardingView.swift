@@ -95,6 +95,9 @@ struct OnboardingView: View {
                             .padding(.horizontal, 32)
 
                         Button {
+                            // 0) VIBRATION forte (heavy + un peu plus longue)
+                            HapticsManager.shared.strongTap()
+
                             // 1) jouer le son une seule fois
                             SoundManager.shared.playStartSound()
 
