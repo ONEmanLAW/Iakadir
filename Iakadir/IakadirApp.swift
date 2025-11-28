@@ -15,15 +15,16 @@ struct IakadirApp: App {
                 .environmentObject(chatStore)
                 .environmentObject(notificationManager)
                 .onAppear {
+                    // Demande l’autorisation une fois
                     notificationManager.requestAuthorization()
-                    // debug rapide :
+                    // debug si tu veux tester :
                     // notificationManager.sendDebugNotification()
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
-                // App au premier plan → on ne veut pas de notifs PRO
+                // App au premier plan → pas de notif PRO
                 notificationManager.cancelBackgroundProReminders()
 
             case .background:

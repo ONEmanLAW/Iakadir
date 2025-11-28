@@ -61,41 +61,49 @@ final class NotificationManager: NSObject, ObservableObject {
     // MARK: - Rappel PRO en background
 
     /// Planifie UNE notif (dans 30s en debug) quand l’app passe en background.
-    /// Plus tard tu pourras passer à 12h / 24h pour 2 notifs par jour.
     func scheduleBackgroundProReminder(isLoggedIn: Bool, username: String?) {
         let center = UNUserNotificationCenter.current()
 
-        // On nettoie d’abord l’ancienne pour éviter les doublons
+        // On enlève l’ancienne demande pour éviter les doublons
         center.removePendingNotificationRequests(withIdentifiers: ["pro_reminder"])
 
-        let loggedName = username ?? "toi"
+        // Messages si l'utilisateur est CONNECTÉ (on met le username)
+        let loggedInMessages: (String) -> [String] = { name in
+            return [
+                "Hey \(name), iakadir PRO t’attend : conversations illimitées et résumés plus longs.",
+                "\(name), et si tu passais à iakadir PRO ? Profite à fond de ton assistant IA.",
+                "Continue ce que tu as commencé avec iakadir PRO, \(name) : plus de limites, plus de puissance."
+            ]
+        }
 
-        // Messages quand l’utilisateur est déjà connecté
-        let loggedInMessages: [String] = [
-            "Hey \(loggedName), iakadir PRO t’attend : conversations illimitées et résumés plus longs.",
-            "\(loggedName), et si tu passais à iakadir PRO ? Profite à fond de ton assistant IA.",
-            "Continue ce que tu as commencé avec iakadir PRO : plus de limites, plus de puissance."
-        ]
-
-        // Messages quand il n’est pas connecté, mais a déjà lancé l’app une fois
+        // Messages si l'utilisateur n’est PAS connecté (messages génériques)
         let loggedOutMessages: [String] = [
-            "Reviens te connecter à iakadir pour découvrir l’offre PRO.",
+            "Reviens sur iakadir et connecte-toi pour découvrir l’offre PRO.",
             "Tu as installé iakadir, mais tu ne profites pas encore de PRO. Connecte-toi pour voir.",
-            "Connecte-toi ou crée un compte pour débloquer iakadir PRO."
+            "Crée un compte ou connecte-toi pour débloquer iakadir PRO."
         ]
 
-        let messages = isLoggedIn ? loggedInMessages : loggedOutMessages
-        guard let message = messages.randomElement() else { return }
+        let bodyText: String
+
+        if isLoggedIn, let name = username, !name.isEmpty {
+            // ✅ Connecté + username dispo → messages avec le pseudo
+            let messages = loggedInMessages(name)
+            bodyText = messages.randomElement() ?? "Hey \(name), iakadir PRO t’attend."
+        } else {
+            // ❌ Pas connecté → messages génériques
+            bodyText = loggedOutMessages.randomElement()
+                ?? "Reviens sur iakadir pour découvrir l’offre PRO."
+        }
 
         let content = UNMutableNotificationContent()
         content.title = "iakadir PRO"
-        content.body = message
+        content.body = bodyText
         content.sound = .default
         content.userInfo = [
             "type": "pro_reminder"
         ]
 
-        // DEBUG : 30s. En prod → par ex. 12h (12 * 3600)
+        // DEBUG : 30s. En prod → 12h (12 * 3600), 24h, etc.
         let trigger = UNTimeIntervalNotificationTrigger(
             timeInterval: 30,
             repeats: false
@@ -129,7 +137,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
 
-        // 👉 On NE montre rien quand l’app est en foreground
+        // On NE montre rien quand l’app est en foreground
         if UIApplication.shared.applicationState == .active {
             completionHandler([])
         } else {
@@ -146,7 +154,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 
         if userInfo["type"] as? String == "pro_reminder" {
             DispatchQueue.main.async {
-                // L’UI (ContentView/HomeView) gérera l’ouverture du Paywall
+                // L’UI (ContentView / HomeView) s’occupe d’ouvrir le Paywall
                 self.navigateToPaywallFromNotification = true
             }
         }
