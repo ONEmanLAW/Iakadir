@@ -11,12 +11,16 @@ struct HomeView: View {
     let username: String
     @EnvironmentObject var auth: AuthViewModel
     @EnvironmentObject var chatStore: ChatStore
+    @EnvironmentObject var notificationManager: NotificationManager
 
     @State private var showMenu = false
     @State private var selectedConversationID: UUID?
     @State private var showConversationOptions = false
     @State private var showRenameSheet = false
     @State private var renameText: String = ""
+
+    // Pour navigation programmée vers le Paywall (tap notif PRO)
+    @State private var showPaywallFromNotification = false
 
     var body: some View {
         ZStack {
@@ -32,10 +36,8 @@ struct HomeView: View {
 
                 Spacer(minLength: 0)
             }
-            // 🔻 moins de padding sur les côtés pour donner plus de largeur aux cartes
             .padding(.horizontal, 14)
             .padding(.top, 24)
-            // 🔻 très peu d’espace sous l’historique
             .padding(.bottom, 2)
         }
         .sheet(isPresented: $showMenu) {
@@ -52,12 +54,31 @@ struct HomeView: View {
         .sheet(isPresented: $showRenameSheet) {
             renameSheet
         }
+        // 👉 Remplace l'ancien NavigationLink(isActive:) déprécié
+        .navigationDestination(isPresented: $showPaywallFromNotification) {
+            PaywallView()
+        }
+        .onAppear {
+            // Si la notif PRO a été tapée avant la connexion,
+            // dès qu’on arrive sur Home on ouvre le Paywall.
+            if notificationManager.navigateToPaywallFromNotification {
+                showPaywallFromNotification = true
+                notificationManager.navigateToPaywallFromNotification = false
+            }
+        }
+        .onChange(of: notificationManager.navigateToPaywallFromNotification) { _, newValue in
+            if newValue {
+                showPaywallFromNotification = true
+                notificationManager.navigateToPaywallFromNotification = false
+            }
+        }
     }
 
     // MARK: - Header
 
     private var header: some View {
         HStack(spacing: 12) {
+            // Bouton menu
             Button {
                 showMenu = true
             } label: {
@@ -74,6 +95,7 @@ struct HomeView: View {
 
             Spacer()
 
+            // Hello + emoji centré
             HStack(spacing: 4) {
                 Text("Hello, \(username)")
                     .foregroundColor(.white)
@@ -83,6 +105,7 @@ struct HomeView: View {
 
             Spacer()
 
+            // Capsule PRO à droite
             NavigationLink {
                 PaywallView()
             } label: {
@@ -118,14 +141,13 @@ struct HomeView: View {
         let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
 
         return VStack(alignment: .leading, spacing: 60) {
-            // ➕ plus d’espace entre header et titre
+            // Titre avec plus d’air autour
             Text("Qu’est-ce que tu\nveux faire ?")
                 .foregroundColor(.white)
                 .font(.system(size: 28, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
 
-            // ➕ plus d’espace entre le titre et les cartes de chat (spacing: 60)
             HStack(alignment: .top, spacing: 8) {
 
                 // GAUCHE : grosse carte "Résumer un son"
@@ -357,11 +379,14 @@ struct ActionCard: View {
                     Circle()
                         .fill(Color.black.opacity(0.12))
                         .frame(width: 36, height: 36)
+
                     Image(systemName: iconName)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.black)
                 }
+
                 Spacer()
+
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.black)
@@ -373,10 +398,9 @@ struct ActionCard: View {
                 .foregroundColor(.black)
                 .font(.system(size: titleFontSize, weight: .semibold))
                 .multilineTextAlignment(.leading)
-                .lineLimit(1)                    // ✅ jamais sur 2 lignes
-                .minimumScaleFactor(0.85)        // réduit un peu la taille si besoin
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
         }
-        // 🔻 padding interne légèrement réduit pour gagner de la largeur
         .padding(14)
         .frame(maxWidth: .infinity)
         .frame(height: height)
@@ -421,7 +445,6 @@ struct HistoryRow: View {
                     .contentShape(Rectangle())
             }
         }
-        // 🔻 padding latéral réduit pour gagner un peu de largeur
         .padding(.horizontal, 8)
         .padding(.vertical, 12)
         .background(
@@ -436,5 +459,6 @@ struct HistoryRow: View {
         HomeView(username: "Ethan")
             .environmentObject(AuthViewModel())
             .environmentObject(ChatStore(userID: "preview-user"))
+            .environmentObject(NotificationManager.shared)
     }
 }
