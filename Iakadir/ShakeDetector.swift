@@ -33,4 +33,3 @@ struct ShakeDetector: UIViewControllerRepresentable {
         uiViewController.onShake = onShake
     }
 }
-
