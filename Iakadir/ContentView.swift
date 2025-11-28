@@ -5,6 +5,7 @@ struct ContentView: View {
     @EnvironmentObject var chatStore: ChatStore
     @State private var hasStartedAuth = false
 
+    // 🔔 Modal déclenché par le shake
     @State private var showShakeModal = false
 
     var body: some View {
@@ -30,6 +31,10 @@ struct ContentView: View {
             // 👉 Détection du shake uniquement quand on est connecté
             if authViewModel.currentUser != nil {
                 ShakeDetector {
+                    // Vibration forte pour confirmer que le shake est détecté
+                    HapticsManager.shared.strongTap()
+
+                    // Affichage du modal
                     showShakeModal = true
                 }
                 .allowsHitTesting(false) // ne bloque pas les interactions avec l’UI
