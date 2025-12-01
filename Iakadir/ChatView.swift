@@ -8,6 +8,44 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Mode de chat
+
+enum ChatMode {
+    case assistant       // Parler à l’IA
+    case summarizeAudio  // Résumer un son
+    case generateImage   // Générer une image
+
+    var title: String {
+        switch self {
+        case .assistant:
+            return "Parler à l’IA"
+        case .summarizeAudio:
+            return "Résumer un son"
+        case .generateImage:
+            return "Générer une image"
+        }
+    }
+
+    var placeholder: String {
+        switch self {
+        case .assistant:
+            return "Écris une demande ici"
+        case .summarizeAudio:
+            return "Décris ton audio ou colle un lien ici"
+        case .generateImage:
+            return "Décris l’image que tu veux créer"
+        }
+    }
+
+    var chipLabel: String {
+        // Pour l’instant on laisse “GPT-4” partout,
+        // plus tard tu pourras mettre autre chose par mode si tu veux.
+        return "GPT-4"
+    }
+}
+
+// MARK: - Modèles
+
 struct ChatMessage: Identifiable, Codable {
     var id = UUID()
     var text: String
@@ -18,10 +56,13 @@ struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var chatStore: ChatStore
 
+    let mode: ChatMode
     let conversationID: UUID?
 
     @State private var messages: [ChatMessage] = []
     @State private var resolvedConversationID: UUID?
+
+    @State private var inputText: String = ""
 
     var body: some View {
         ZStack {
@@ -43,6 +84,8 @@ struct ChatView: View {
         }
     }
 
+    // MARK: - Header
+
     private var header: some View {
         HStack {
             Button {
@@ -61,14 +104,14 @@ struct ChatView: View {
 
             Spacer()
 
-            Text("Parler à l’IA")
+            Text(mode.title)
                 .foregroundColor(.white)
                 .font(.system(size: 17, weight: .semibold))
 
             Spacer()
 
             HStack(spacing: 6) {
-                Text("GPT-4")
+                Text(mode.chipLabel)
                     .font(.system(size: 13, weight: .semibold))
                 Image(systemName: "sparkles")
                     .font(.system(size: 12, weight: .medium))
@@ -84,6 +127,7 @@ struct ChatView: View {
         .padding(.top, 8)
     }
 
+    // MARK: - Contenu chat
 
     private var chatContent: some View {
         let lastBotId = messages.last(where: { !$0.isUser })?.id
@@ -93,7 +137,7 @@ struct ChatView: View {
 
                 if messages.isEmpty {
                     VStack(spacing: 12) {
-                        Text("Pose-moi une question pour commencer.")
+                        Text(emptyStateText)
                             .foregroundColor(.white.opacity(0.7))
                             .font(.system(size: 15))
                             .multilineTextAlignment(.center)
@@ -146,10 +190,22 @@ struct ChatView: View {
         }
     }
 
+    private var emptyStateText: String {
+        switch mode {
+        case .assistant:
+            return "Pose-moi une question pour commencer."
+        case .summarizeAudio:
+            return "Envoie-moi les détails de ton audio (lien, contexte…) pour que je puisse le résumer."
+        case .generateImage:
+            return "Décris l’image que tu veux générer (style, sujet, ambiance…)."
+        }
+    }
+
+    // MARK: - Input bar
 
     private var inputBar: some View {
         HStack {
-            TextField("Écris une demande ici", text: $inputText)
+            TextField(mode.placeholder, text: $inputText)
                 .foregroundColor(.white)
                 .font(.system(size: 15))
                 .textInputAutocapitalization(.never)
@@ -182,8 +238,7 @@ struct ChatView: View {
         .padding(.bottom, 4)
     }
 
-    @State private var inputText: String = ""
-
+    // MARK: - Logique conversation
 
     private func setupConversation() {
         if let id = resolvedConversationID,
@@ -217,7 +272,17 @@ struct ChatView: View {
         messages.append(userMessage)
         inputText = ""
 
-        let botText = "J’ai reçu ton message."
+        // Pour l’instant, même comportement pour les 3 modes :
+        let botText: String
+        switch mode {
+        case .assistant:
+            botText = "J’ai reçu ton message."
+        case .summarizeAudio:
+            botText = "J’ai bien reçu les infos sur ton audio. (Visuel uniquement pour l’instant)"
+        case .generateImage:
+            botText = "J’ai bien reçu ta description d’image. (Visuel uniquement pour l’instant)"
+        }
+
         let botMessage = ChatMessage(text: botText, isUser: false)
         messages.append(botMessage)
 
@@ -235,6 +300,8 @@ struct ChatView: View {
         UIPasteboard.general.string = lastBot.text
     }
 }
+
+// MARK: - Bulles & Chips
 
 struct MessageBubble: View {
     let text: String
@@ -283,8 +350,7 @@ struct ActionChip: View {
 
 #Preview {
     NavigationStack {
-        ChatView(conversationID: nil)
+        ChatView(mode: .assistant, conversationID: nil)
             .environmentObject(ChatStore(userID: "preview-user"))
     }
 }
-

@@ -38,7 +38,8 @@ struct HistoryView: View {
                         } else {
                             ForEach(sorted) { conv in
                                 NavigationLink {
-                                    ChatView(conversationID: conv.id)
+                                    // 👉 Nouveau ChatView avec le mode assistant
+                                    ChatView(mode: .assistant, conversationID: conv.id)
                                 } label: {
                                     HistoryRow(
                                         iconBackground: Color.primaryPurple,

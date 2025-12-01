@@ -19,7 +19,6 @@ struct HomeView: View {
     @State private var showRenameSheet = false
     @State private var renameText: String = ""
 
-    // Pour navigation programmée vers le Paywall (tap notif PRO)
     @State private var showPaywallFromNotification = false
 
     var body: some View {
@@ -54,7 +53,6 @@ struct HomeView: View {
         .sheet(isPresented: $showRenameSheet) {
             renameSheet
         }
-        // Navigation programmée vers le Paywall
         .navigationDestination(isPresented: $showPaywallFromNotification) {
             PaywallView()
         }
@@ -148,20 +146,26 @@ struct HomeView: View {
 
             HStack(alignment: .top, spacing: 8) {
 
-                // GAUCHE : grosse carte "Résumer\nun son"
-                ActionCard(
-                    title: "Résumer\nun son",  // ← forcer le retour à la ligne
-                    iconName: "ear.badge.waveform",
-                    background: Color.primaryGreen,
-                    height: bigHeight,
-                    titleFontSize: 24          // ← typo un peu plus grande
-                )
+                // GAUCHE : grosse carte "Résumer\nun son" → Chat mode audio
+                NavigationLink {
+                    ChatView(mode: .summarizeAudio, conversationID: nil)
+                } label: {
+                    ActionCard(
+                        title: "Résumer\nun son",
+                        iconName: "ear.badge.waveform",
+                        background: Color.primaryGreen,
+                        height: bigHeight,
+                        titleFontSize: 24
+                    )
+                }
+                .buttonStyle(.plain)
 
                 // DROITE : deux cartes empilées
                 VStack(spacing: verticalSpacing) {
 
+                    // Parler à l’IA → Chat standard
                     NavigationLink {
-                        ChatView(conversationID: nil)
+                        ChatView(mode: .assistant, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Parler à l’IA",
@@ -173,13 +177,19 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    ActionCard(
-                        title: "Générer une image",
-                        iconName: "photo.on.rectangle",
-                        background: Color.lightPink,
-                        height: smallHeight,
-                        titleFontSize: 18
-                    )
+                    // Générer une image → Chat mode image
+                    NavigationLink {
+                        ChatView(mode: .generateImage, conversationID: nil)
+                    } label: {
+                        ActionCard(
+                            title: "Générer une image",
+                            iconName: "photo.on.rectangle",
+                            background: Color.lightPink,
+                            height: smallHeight,
+                            titleFontSize: 18
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -218,7 +228,7 @@ struct HomeView: View {
             } else {
                 ForEach(topThree) { conv in
                     NavigationLink {
-                        ChatView(conversationID: conv.id)
+                        ChatView(mode: .assistant, conversationID: conv.id)
                     } label: {
                         HistoryRow(
                             iconBackground: Color.primaryPurple,
@@ -386,7 +396,7 @@ struct ActionCard: View {
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold)) // ✅ corrigé ici
                     .foregroundColor(.black)
             }
 
@@ -396,7 +406,7 @@ struct ActionCard: View {
                 .foregroundColor(.black)
                 .font(.system(size: titleFontSize, weight: .semibold))
                 .multilineTextAlignment(.leading)
-                .lineLimit(2)               // ← pour permettre "Résumer\nun son"
+                .lineLimit(2)
                 .minimumScaleFactor(0.85)
         }
         .padding(14)
