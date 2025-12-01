@@ -54,13 +54,11 @@ struct HomeView: View {
         .sheet(isPresented: $showRenameSheet) {
             renameSheet
         }
-        // 👉 Remplace l'ancien NavigationLink(isActive:) déprécié
+        // Navigation programmée vers le Paywall
         .navigationDestination(isPresented: $showPaywallFromNotification) {
             PaywallView()
         }
         .onAppear {
-            // Si la notif PRO a été tapée avant la connexion,
-            // dès qu’on arrive sur Home on ouvre le Paywall.
             if notificationManager.navigateToPaywallFromNotification {
                 showPaywallFromNotification = true
                 notificationManager.navigateToPaywallFromNotification = false
@@ -141,7 +139,7 @@ struct HomeView: View {
         let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
 
         return VStack(alignment: .leading, spacing: 60) {
-            // Titre avec plus d’air autour
+            // Titre
             Text("Qu’est-ce que tu\nveux faire ?")
                 .foregroundColor(.white)
                 .font(.system(size: 28, weight: .semibold))
@@ -150,13 +148,13 @@ struct HomeView: View {
 
             HStack(alignment: .top, spacing: 8) {
 
-                // GAUCHE : grosse carte "Résumer un son"
+                // GAUCHE : grosse carte "Résumer\nun son"
                 ActionCard(
-                    title: "Résumer un son",
+                    title: "Résumer\nun son",  // ← forcer le retour à la ligne
                     iconName: "ear.badge.waveform",
                     background: Color.primaryGreen,
                     height: bigHeight,
-                    titleFontSize: 20
+                    titleFontSize: 24          // ← typo un peu plus grande
                 )
 
                 // DROITE : deux cartes empilées
@@ -398,7 +396,7 @@ struct ActionCard: View {
                 .foregroundColor(.black)
                 .font(.system(size: titleFontSize, weight: .semibold))
                 .multilineTextAlignment(.leading)
-                .lineLimit(1)
+                .lineLimit(2)               // ← pour permettre "Résumer\nun son"
                 .minimumScaleFactor(0.85)
         }
         .padding(14)
