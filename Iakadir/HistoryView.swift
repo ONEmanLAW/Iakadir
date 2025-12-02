@@ -114,7 +114,7 @@ struct HistoryView: View {
         case .summarizeAudio:
             return (Color.primaryGreen, "ear.badge.waveform")
         case .generateImage:
-            return (Color.primaryPurple, "photo.on.rectangle")
+            return (Color.lightPink, "photo.on.rectangle")
         }
     }
 
