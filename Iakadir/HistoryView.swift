@@ -18,10 +18,17 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
+            // Fond noir
             Color.black.ignoresSafeArea()
+            
+            // 🖼 Décor en haut à droite
+            Image("trait2")
+                .scaledToFit()
+                .frame(width: 260)
+                .offset(x: 70, y: -320)
+                .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 24) {
-
                 header
 
                 ScrollView {
@@ -106,7 +113,8 @@ struct HistoryView: View {
         }
     }
 
-    // même mapping que dans HomeView
+    // MARK: - Icones selon le mode
+
     private func iconConfig(for mode: ChatMode) -> (Color, String) {
         switch mode {
         case .assistant:
