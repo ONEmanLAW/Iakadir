@@ -18,24 +18,18 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            // Fond noir
             Color.black.ignoresSafeArea()
-            
-            // 🖼 Décor en haut à droite
-            Image("trait2")
-                .scaledToFit()
-                .frame(width: 260)
-                .offset(x: 70, y: -320)
-                .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 24) {
+
                 header
+
+                // On calcule la liste triée une seule fois
+                let sorted = chatStore.conversations
+                    .sorted { $0.updatedAt > $1.updatedAt }
 
                 ScrollView {
                     VStack(spacing: 12) {
-                        let sorted = chatStore.conversations
-                            .sorted { $0.updatedAt > $1.updatedAt }
-
                         if sorted.isEmpty {
                             Text("Aucune conversation pour l’instant.")
                                 .foregroundColor(.white.opacity(0.5))
@@ -65,10 +59,24 @@ struct HistoryView: View {
                     }
                     .padding(.top, 8)
                 }
+                // 🔒 Pas de scroll si aucune conversation
+                .scrollDisabled(sorted.isEmpty)
             }
             .padding(.horizontal, 20)
             .padding(.top, 24)
             .padding(.bottom, 16)
+            // 🖼 Décor en background, en haut à droite
+            .background(
+                ZStack(alignment: .topTrailing) {
+                    Image("trait2")
+                        
+                        .scaledToFit()
+                        
+                        
+                        .offset(x: 70, y: -320)
+                        .allowsHitTesting(false)
+                }
+            )
         }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Options de la conversation",
@@ -113,7 +121,7 @@ struct HistoryView: View {
         }
     }
 
-    // MARK: - Icones selon le mode
+    // MARK: - Icônes selon le mode
 
     private func iconConfig(for mode: ChatMode) -> (Color, String) {
         switch mode {

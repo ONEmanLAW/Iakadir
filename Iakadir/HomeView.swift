@@ -430,7 +430,7 @@ struct HistoryRow: View {
     let onMoreTapped: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ZStack {
                 Circle()
                     .fill(iconBackground)
@@ -444,27 +444,32 @@ struct HistoryRow: View {
             Text(text)
                 .foregroundColor(.white)
                 .font(.system(size: 15))
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(1)
 
             Spacer()
 
             Button(action: onMoreTapped) {
                 Image(systemName: "ellipsis")
-                    .rotationEffect(.degrees(90))
                     .foregroundColor(.white.opacity(0.7))
-                    .padding(6)
+                    .padding(10)
                     .contentShape(Rectangle())
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color.white.opacity(0.06))
+            RoundedRectangle(cornerRadius: 26)
+                .fill(
+                    Color(
+                        red: 0.13,
+                        green: 0.13,
+                        blue: 0.15
+                    ) // 🔒 fond opaque, plus de transparence
+                )
         )
     }
 }
+
 
 #Preview {
     NavigationStack {
