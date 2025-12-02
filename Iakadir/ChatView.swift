@@ -10,7 +10,7 @@ import UIKit
 
 // MARK: - Mode de chat
 
-enum ChatMode {
+enum ChatMode: String, Codable {
     case assistant       // Parler à l’IA
     case summarizeAudio  // Résumer un son
     case generateImage   // Générer une image
@@ -38,8 +38,6 @@ enum ChatMode {
     }
 
     var chipLabel: String {
-        // Pour l’instant on laisse “GPT-4” partout,
-        // plus tard tu pourras mettre autre chose par mode si tu veux.
         return "GPT-4"
     }
 }
@@ -241,12 +239,14 @@ struct ChatView: View {
     // MARK: - Logique conversation
 
     private func setupConversation() {
+        // 1) Si déjà résolue
         if let id = resolvedConversationID,
            let conv = chatStore.conversation(with: id) {
             messages = conv.messages
             return
         }
 
+        // 2) Si on a reçu un ID existant
         if let passedID = conversationID,
            let conv = chatStore.conversation(with: passedID) {
             resolvedConversationID = conv.id
@@ -254,7 +254,8 @@ struct ChatView: View {
             return
         }
 
-        let newConv = chatStore.createConversation()
+        // 3) Nouvelle conversation avec CE mode
+        let newConv = chatStore.createConversation(mode: mode)
         resolvedConversationID = newConv.id
         messages = newConv.messages
     }
@@ -272,7 +273,6 @@ struct ChatView: View {
         messages.append(userMessage)
         inputText = ""
 
-        // Pour l’instant, même comportement pour les 3 modes :
         let botText: String
         switch mode {
         case .assistant:

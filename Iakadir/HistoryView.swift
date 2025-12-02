@@ -37,13 +37,14 @@ struct HistoryView: View {
                                 .padding(.top, 8)
                         } else {
                             ForEach(sorted) { conv in
+                                let (bgColor, iconName) = iconConfig(for: conv.mode)
+
                                 NavigationLink {
-                                    // 👉 Nouveau ChatView avec le mode assistant
-                                    ChatView(mode: .assistant, conversationID: conv.id)
+                                    ChatView(mode: conv.mode, conversationID: conv.id)
                                 } label: {
                                     HistoryRow(
-                                        iconBackground: Color.primaryPurple,
-                                        iconName: "text.bubble",
+                                        iconBackground: bgColor,
+                                        iconName: iconName,
                                         text: displayText(for: conv),
                                         onMoreTapped: {
                                             selectedConversationID = conv.id
@@ -101,8 +102,19 @@ struct HistoryView: View {
 
             Spacer()
 
-            // petit spacer pour équilibrer visuellement le header
             Color.clear.frame(width: 40, height: 40)
+        }
+    }
+
+    // même mapping que dans HomeView
+    private func iconConfig(for mode: ChatMode) -> (Color, String) {
+        switch mode {
+        case .assistant:
+            return (Color.primaryPurple, "text.bubble")
+        case .summarizeAudio:
+            return (Color.primaryGreen, "ear.badge.waveform")
+        case .generateImage:
+            return (Color.primaryPurple, "photo.on.rectangle")
         }
     }
 

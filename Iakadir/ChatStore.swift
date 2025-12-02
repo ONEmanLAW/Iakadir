@@ -9,10 +9,53 @@ import Foundation
 
 struct Conversation: Identifiable, Codable {
     var id: UUID
-    var title: String           // titre custom (peut être vide)
+    var title: String
     var lastMessagePreview: String
     var updatedAt: Date
     var messages: [ChatMessage]
+    var mode: ChatMode
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, lastMessagePreview, updatedAt, messages, mode
+    }
+
+    init(
+        id: UUID = UUID(),
+        title: String = "",
+        lastMessagePreview: String = "",
+        updatedAt: Date = Date(),
+        messages: [ChatMessage] = [],
+        mode: ChatMode = .assistant
+    ) {
+        self.id = id
+        self.title = title
+        self.lastMessagePreview = lastMessagePreview
+        self.updatedAt = updatedAt
+        self.messages = messages
+        self.mode = mode
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        lastMessagePreview = try container.decode(String.self, forKey: .lastMessagePreview)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        messages = try container.decode([ChatMessage].self, forKey: .messages)
+        mode = try container.decodeIfPresent(ChatMode.self, forKey: .mode) ?? .assistant
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(lastMessagePreview, forKey: .lastMessagePreview)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encode(messages, forKey: .messages)
+        try container.encode(mode, forKey: .mode)
+    }
 }
 
 final class ChatStore: ObservableObject {
@@ -21,7 +64,6 @@ final class ChatStore: ObservableObject {
     private let storageKeyBase = "chat_conversations_v1"
     private var currentUserID: String?
 
-    // Clé calculée en fonction de l’utilisateur
     private var storageKey: String {
         if let id = currentUserID, !id.isEmpty {
             return "\(storageKeyBase)_user_\(id)"
@@ -35,15 +77,12 @@ final class ChatStore: ObservableObject {
         load()
     }
 
-    /// À appeler quand l’utilisateur se connecte / se déconnecte
     func setUserID(_ id: String?) {
-        // si c’est le même user, on ne recharge pas pour rien
         if id == currentUserID { return }
         currentUserID = id
         load()
     }
 
-    // Charger depuis UserDefaults pour CE user
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else {
             conversations = []
@@ -58,7 +97,6 @@ final class ChatStore: ObservableObject {
         }
     }
 
-    // Sauvegarder dans UserDefaults pour CE user
     private func save() {
         do {
             let data = try JSONEncoder().encode(conversations)
@@ -68,13 +106,14 @@ final class ChatStore: ObservableObject {
         }
     }
 
-    func createConversation() -> Conversation {
+    func createConversation(mode: ChatMode) -> Conversation {
         let conversation = Conversation(
             id: UUID(),
             title: "",
             lastMessagePreview: "",
             updatedAt: Date(),
-            messages: []
+            messages: [],
+            mode: mode
         )
         conversations.insert(conversation, at: 0)
         save()

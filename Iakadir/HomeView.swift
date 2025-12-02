@@ -74,7 +74,6 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            // Bouton menu
             Button {
                 showMenu = true
             } label: {
@@ -91,7 +90,6 @@ struct HomeView: View {
 
             Spacer()
 
-            // Hello + emoji centré
             HStack(spacing: 4) {
                 Text("Hello, \(username)")
                     .foregroundColor(.white)
@@ -101,7 +99,6 @@ struct HomeView: View {
 
             Spacer()
 
-            // Capsule PRO à droite
             NavigationLink {
                 PaywallView()
             } label: {
@@ -129,7 +126,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Hero (cartes chat)
+    // MARK: - Hero
 
     private var heroSection: some View {
         let smallHeight: CGFloat = 110
@@ -137,7 +134,6 @@ struct HomeView: View {
         let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
 
         return VStack(alignment: .leading, spacing: 60) {
-            // Titre
             Text("Qu’est-ce que tu\nveux faire ?")
                 .foregroundColor(.white)
                 .font(.system(size: 28, weight: .semibold))
@@ -146,7 +142,6 @@ struct HomeView: View {
 
             HStack(alignment: .top, spacing: 8) {
 
-                // GAUCHE : grosse carte "Résumer\nun son" → Chat mode audio
                 NavigationLink {
                     ChatView(mode: .summarizeAudio, conversationID: nil)
                 } label: {
@@ -160,10 +155,8 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
 
-                // DROITE : deux cartes empilées
                 VStack(spacing: verticalSpacing) {
 
-                    // Parler à l’IA → Chat standard
                     NavigationLink {
                         ChatView(mode: .assistant, conversationID: nil)
                     } label: {
@@ -177,7 +170,6 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // Générer une image → Chat mode image
                     NavigationLink {
                         ChatView(mode: .generateImage, conversationID: nil)
                     } label: {
@@ -213,6 +205,18 @@ struct HomeView: View {
         }
     }
 
+    // helper pour icône + couleur selon le mode
+    private func iconConfig(for mode: ChatMode) -> (Color, String) {
+        switch mode {
+        case .assistant:
+            return (Color.primaryPurple, "text.bubble")
+        case .summarizeAudio:
+            return (Color.primaryGreen, "ear.badge.waveform")
+        case .generateImage:
+            return (Color.lightPink, "photo.on.rectangle")
+        }
+    }
+
     @ViewBuilder
     private var historyList: some View {
         let sorted = chatStore.conversations.sorted { $0.updatedAt > $1.updatedAt }
@@ -227,12 +231,14 @@ struct HomeView: View {
                     .padding(.top, 4)
             } else {
                 ForEach(topThree) { conv in
+                    let (bgColor, iconName) = iconConfig(for: conv.mode)
+
                     NavigationLink {
-                        ChatView(mode: .assistant, conversationID: conv.id)
+                        ChatView(mode: conv.mode, conversationID: conv.id)
                     } label: {
                         HistoryRow(
-                            iconBackground: Color.primaryPurple,
-                            iconName: "text.bubble",
+                            iconBackground: bgColor,
+                            iconName: iconName,
                             text: displayText(for: conv),
                             onMoreTapped: {
                                 selectedConversationID = conv.id
@@ -256,7 +262,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Menu déconnexion
+    // MARK: - Menu / rename (inchangé)
 
     private var menuSheet: some View {
         NavigationStack {
@@ -293,8 +299,6 @@ struct HomeView: View {
         }
         .presentationDetents([.height(220)])
     }
-
-    // MARK: - Rename / delete
 
     private func prepareRename() {
         guard let id = selectedConversationID,
@@ -396,7 +400,7 @@ struct ActionCard: View {
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .semibold)) // ✅ corrigé ici
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.black)
             }
 
