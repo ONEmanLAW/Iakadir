@@ -160,8 +160,6 @@ struct PaywallView: View {
                     .font(.system(size: 26, weight: .semibold))
             }
 
-            // 👉 Les FeatureRow sont alignées en .leading,
-            // donc la colonne d’icônes reste parfaitement droite.
             VStack(alignment: .leading, spacing: 10) {
                 FeatureRow(icon: "sparkles", text: "Access to all features")
                 FeatureRow(icon: "brain.head.profile", text: "Powered by ChatGPT-4")
@@ -169,7 +167,6 @@ struct PaywallView: View {
                 FeatureRow(icon: "doc.text.magnifyingglass", text: "More detailed answers")
             }
         }
-        // Le bloc complet est centré dans le header
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
@@ -186,7 +183,7 @@ struct PaywallView: View {
         Color(red: 20/255, green: 20/255, blue: 35/255)
     }
 
-    // — carte hebdomadaire
+    // — carte hebdomadaire (texte aligné à gauche)
     private var weeklyPlanCard: some View {
         let isSelected = (selectedPlan == .weekly)
 
@@ -194,13 +191,15 @@ struct PaywallView: View {
             Text("3 jours gratuits, puis")
                 .font(.system(size: 13))
                 .foregroundColor(.white.opacity(0.8))
+                .multilineTextAlignment(.leading)
 
             Text("$5,99 / semaine, annulable facilement")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.white)
+                .multilineTextAlignment(.leading)
         }
         .padding(16)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(cardBackground)
@@ -328,7 +327,6 @@ struct FeatureRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // 👉 Colonne d’icônes bien droite
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(Color.primaryGreen)
