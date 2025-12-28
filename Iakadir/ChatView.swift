@@ -59,7 +59,6 @@ struct ChatView: View {
     @State private var resolvedConversationID: UUID?
     @State private var inputText: String = ""
 
-    // ✅ NEW
     @State private var isSending: Bool = false
     private let ai = OpenAIProxyService()
 
@@ -266,7 +265,7 @@ struct ChatView: View {
         chatStore.updateConversation(id: id, messages: messages)
     }
 
-    // ✅ NEW : transforme ton historique en format API (on évite le placeholder "…")
+    // Transforme ton historique en format API (on évite le placeholder "…")
     private func openAIInput(from messages: [ChatMessage], limit: Int = 20) -> [OpenAIInputMessage] {
         let filtered = messages.filter { !(!$0.isUser && $0.text == "…") }
         let slice = filtered.suffix(limit)
@@ -286,7 +285,32 @@ struct ChatView: View {
         }
     }
 
-    // ✅ NEW : envoi async vers l’IA
+    // ✅ Détection quota/billing + message UX personnalisé
+    private func isQuotaOrBillingError(_ error: Error) -> Bool {
+        let desc = (error as NSError).localizedDescription.lowercased()
+        return desc.contains("insufficient_quota")
+            || desc.contains("exceeded your current quota")
+            || desc.contains("quota")
+            || desc.contains("billing")
+            || desc.contains("plan and billing")
+    }
+
+    private func userFriendlyErrorTextForSend(_ error: Error) -> String {
+        if isQuotaOrBillingError(error) {
+            return "Ton message a bien été pris en compte par ChatGPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+        }
+        return "Impossible de contacter ChatGPT pour le moment."
+    }
+
+    private func userFriendlyErrorTextForRegenerate(_ error: Error) -> String {
+        if isQuotaOrBillingError(error) {
+            return "Ton message a bien été régénéré et pris en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+        }
+        return "Impossible de contacter ChatGPT pour le moment."
+    }
+
+    // MARK: - Envoi vers l’IA
+
     private func sendMessage() {
         Task { await sendMessageAsync() }
     }
@@ -325,10 +349,11 @@ struct ChatView: View {
 
             persistMessages()
         } catch {
+            let msg = userFriendlyErrorTextForSend(error)
             if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
-                messages[idx].text = "Erreur: \(error.localizedDescription)"
+                messages[idx].text = msg
             } else {
-                messages.append(ChatMessage(text: "Erreur: \(error.localizedDescription)", isUser: false))
+                messages.append(ChatMessage(text: msg, isUser: false))
             }
             persistMessages()
         }
@@ -336,7 +361,8 @@ struct ChatView: View {
         isSending = false
     }
 
-    // ✅ NEW : régénérer = refaire un call IA (on retire le dernier bot et on le remplace)
+    // MARK: - Régénérer / Copier
+
     private func regenerateLastBotMessage() {
         Task { await regenerateAsync() }
     }
@@ -373,8 +399,9 @@ struct ChatView: View {
 
             persistMessages()
         } catch {
+            let msg = userFriendlyErrorTextForRegenerate(error)
             if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
-                messages[idx].text = "Erreur: \(error.localizedDescription)"
+                messages[idx].text = msg
             }
             persistMessages()
         }
