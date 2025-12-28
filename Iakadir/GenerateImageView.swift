@@ -27,8 +27,6 @@ struct GenerateImageView: View {
     @State private var inputText: String = ""
     @State private var isSending: Bool = false
 
-    private let suggestion: String = "Des chèvres dans l’espace"
-
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -36,11 +34,6 @@ struct GenerateImageView: View {
             VStack(spacing: 16) {
                 header
                 stylePickerRow
-
-                if !hasAnyUserPrompt {
-                    suggestionChip
-                }
-
                 chatContent
                 inputBar
             }
@@ -58,7 +51,6 @@ struct GenerateImageView: View {
         if let id = resolvedConversationID,
            let conv = chatStore.conversation(with: id) {
             messages = conv.messages
-            ensureIntroIfNeeded()
             return
         }
 
@@ -66,35 +58,17 @@ struct GenerateImageView: View {
            let conv = chatStore.conversation(with: passedID) {
             resolvedConversationID = conv.id
             messages = conv.messages
-            ensureIntroIfNeeded()
             return
         }
 
         let newConv = chatStore.createConversation(mode: .generateImage)
         resolvedConversationID = newConv.id
         messages = newConv.messages
-        ensureIntroIfNeeded()
     }
 
     private func persistMessages() {
         guard let id = resolvedConversationID else { return }
         chatStore.updateConversation(id: id, messages: messages)
-    }
-
-    private func ensureIntroIfNeeded() {
-        guard messages.isEmpty else { return }
-        messages.append(
-            ChatMessage(
-                text: "Envoie-moi un texte pour générer une image (tu peux choisir un style au-dessus).",
-                isUser: false,
-                kind: .text
-            )
-        )
-        persistMessages()
-    }
-
-    private var hasAnyUserPrompt: Bool {
-        messages.contains(where: { $0.isUser })
     }
 
     // MARK: - Header
@@ -167,58 +141,51 @@ struct GenerateImageView: View {
         }
     }
 
-    private var suggestionChip: some View {
-        Button { sendPrompt(suggestion) } label: {
-            Text(suggestion)
-                .foregroundColor(.white)
-                .font(.system(size: 16, weight: .medium))
-                .padding(.horizontal, 18)
-                .padding(.vertical, 10)
-                .background(
-                    Capsule()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                        .background(Capsule().fill(Color.black.opacity(0.10)))
-                )
-        }
-        .disabled(isSending)
-        .opacity(isSending ? 0.6 : 1)
-        .padding(.top, 2)
-    }
-
-    // MARK: - Chat Content (même bulles que ChatView)
+    // MARK: - Chat Content
 
     private var chatContent: some View {
         let lastAssistantId = messages.last(where: { !$0.isUser })?.id
 
         return ScrollView {
             VStack(spacing: 16) {
-                ForEach(messages) { msg in
-                    if !msg.isUser && msg.id == lastAssistantId {
-                        VStack(spacing: 0) {
-                            assistantBubble(message: msg)
 
-                            HStack(spacing: 32) {
-                                ActionChip(icon: "arrow.clockwise", title: "Régénérer") {
-                                    regenerateLast()
+                // ✅ Empty state = juste du texte blanc (UI), pas un message IA stocké
+                if messages.isEmpty {
+                    Text("Décris l’image que tu veux générer.")
+                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(size: 15))
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 40)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    ForEach(messages) { msg in
+                        if !msg.isUser && msg.id == lastAssistantId {
+                            VStack(spacing: 0) {
+                                assistantBubble(message: msg)
+
+                                HStack(spacing: 32) {
+                                    ActionChip(icon: "arrow.clockwise", title: "Régénérer") {
+                                        regenerateLast()
+                                    }
+                                    ActionChip(icon: "doc.on.doc", title: "Copier") {
+                                        UIPasteboard.general.string = msg.text
+                                    }
                                 }
-                                ActionChip(icon: "doc.on.doc", title: "Copier") {
-                                    UIPasteboard.general.string = msg.text
-                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                        .fill(Color.black.opacity(0.95))
+                                )
+                                .padding(.horizontal, 4)
+                                .padding(.top, 4)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                    .fill(Color.black.opacity(0.95))
-                            )
-                            .padding(.horizontal, 4)
-                            .padding(.top, 4)
-                        }
-                    } else {
-                        if msg.isUser {
-                            MessageBubble(text: msg.text, isUser: true)
                         } else {
-                            assistantBubble(message: msg)
+                            if msg.isUser {
+                                MessageBubble(text: msg.text, isUser: true)
+                            } else {
+                                assistantBubble(message: msg)
+                            }
                         }
                     }
                 }
@@ -321,7 +288,7 @@ struct GenerateImageView: View {
         "Votre image \(style.lowercaseLabel) a bien été régénérée et prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
     }
 
-    // MARK: - Send / Regenerate (AJOUTE)
+    // MARK: - Send / Regenerate
 
     private func sendPrompt(_ prompt: String) {
         guard !isSending else { return }
@@ -329,8 +296,10 @@ struct GenerateImageView: View {
 
         let frozenStyle = selectedStyle
 
+        // user prompt
         messages.append(ChatMessage(text: prompt, isUser: true, kind: .text))
 
+        // assistant placeholder (image result)
         let placeholderID = UUID()
         messages.append(
             ChatMessage(
