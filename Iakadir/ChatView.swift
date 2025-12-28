@@ -37,9 +37,7 @@ enum ChatMode: String, Codable {
         }
     }
 
-    var chipLabel: String {
-        return "GPT-4"
-    }
+    var chipLabel: String { "GPT-4" }
 }
 
 // MARK: - Modèles
@@ -59,15 +57,17 @@ struct ChatView: View {
 
     @State private var messages: [ChatMessage] = []
     @State private var resolvedConversationID: UUID?
-
     @State private var inputText: String = ""
+
+    // ✅ NEW
+    @State private var isSending: Bool = false
+    private let ai = OpenAIProxyService()
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 16) {
-
                 header
                 chatContent
                 inputBar
@@ -226,6 +226,7 @@ struct ChatView: View {
                 }
                 .padding(.trailing, 6)
             }
+            .disabled(isSending)
         }
         .frame(height: 56)
         .background(
@@ -265,34 +266,120 @@ struct ChatView: View {
         chatStore.updateConversation(id: id, messages: messages)
     }
 
+    // ✅ NEW : transforme ton historique en format API (on évite le placeholder "…")
+    private func openAIInput(from messages: [ChatMessage], limit: Int = 20) -> [OpenAIInputMessage] {
+        let filtered = messages.filter { !(!$0.isUser && $0.text == "…") }
+        let slice = filtered.suffix(limit)
+        return slice.map { msg in
+            OpenAIInputMessage(role: msg.isUser ? "user" : "assistant", content: msg.text)
+        }
+    }
+
+    private func instructionsForMode() -> String {
+        switch mode {
+        case .assistant:
+            return "Tu es un assistant utile, clair et concis."
+        case .summarizeAudio:
+            return "Tu résumes un audio à partir d'une description texte. Fais un résumé clair + des points clés."
+        case .generateImage:
+            return "Tu aides à écrire un prompt d'image détaillé (sujet, style, lumière, cadrage), en texte."
+        }
+    }
+
+    // ✅ NEW : envoi async vers l’IA
     private func sendMessage() {
+        Task { await sendMessageAsync() }
+    }
+
+    @MainActor
+    private func sendMessageAsync() async {
+        if isSending { return }
+
         let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        let userMessage = ChatMessage(text: trimmed, isUser: true)
-        messages.append(userMessage)
+        isSending = true
+
+        // 1) Ajoute le message user
+        messages.append(ChatMessage(text: trimmed, isUser: true))
         inputText = ""
 
-        let botText: String
-        switch mode {
-        case .assistant:
-            botText = "J’ai reçu ton message."
-        case .summarizeAudio:
-            botText = "J’ai bien reçu les infos sur ton audio. (Visuel uniquement pour l’instant)"
-        case .generateImage:
-            botText = "J’ai bien reçu ta description d’image. (Visuel uniquement pour l’instant)"
+        // 2) Placeholder bot
+        let placeholderID = UUID()
+        messages.append(ChatMessage(id: placeholderID, text: "…", isUser: false))
+        persistMessages()
+
+        do {
+            let input = openAIInput(from: messages, limit: 20)
+            let reply = try await ai.generateText(
+                input: input,
+                instructions: instructionsForMode(),
+                model: "gpt-4.1"
+            )
+
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = reply
+            } else {
+                messages.append(ChatMessage(text: reply, isUser: false))
+            }
+
+            persistMessages()
+        } catch {
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = "Erreur: \(error.localizedDescription)"
+            } else {
+                messages.append(ChatMessage(text: "Erreur: \(error.localizedDescription)", isUser: false))
+            }
+            persistMessages()
         }
 
-        let botMessage = ChatMessage(text: botText, isUser: false)
-        messages.append(botMessage)
-
-        persistMessages()
+        isSending = false
     }
 
+    // ✅ NEW : régénérer = refaire un call IA (on retire le dernier bot et on le remplace)
     private func regenerateLastBotMessage() {
-        guard let index = messages.lastIndex(where: { !$0.isUser }) else { return }
-        messages[index].text += " (regénéré)"
+        Task { await regenerateAsync() }
+    }
+
+    @MainActor
+    private func regenerateAsync() async {
+        if isSending { return }
+
+        guard let lastBotIndex = messages.lastIndex(where: { !$0.isUser }) else { return }
+
+        isSending = true
+
+        // Retire la dernière réponse bot
+        messages.remove(at: lastBotIndex)
+
+        // Placeholder
+        let placeholderID = UUID()
+        messages.append(ChatMessage(id: placeholderID, text: "…", isUser: false))
         persistMessages()
+
+        do {
+            let input = openAIInput(from: messages, limit: 20)
+            let reply = try await ai.generateText(
+                input: input,
+                instructions: instructionsForMode(),
+                model: "gpt-4.1"
+            )
+
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = reply
+            } else {
+                messages.append(ChatMessage(text: reply, isUser: false))
+            }
+
+            persistMessages()
+        } catch {
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = "Erreur: \(error.localizedDescription)"
+            }
+            persistMessages()
+        }
+
+        isSending = false
     }
 
     private func copyLastBotMessage() {
