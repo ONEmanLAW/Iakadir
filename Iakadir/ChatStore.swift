@@ -1,10 +1,3 @@
-//
-//  ChatStore.swift
-//  Iakadir
-//
-//  Created by digital on 24/11/2025.
-//
-
 import Foundation
 
 struct Conversation: Identifiable, Codable {
@@ -124,16 +117,34 @@ final class ChatStore: ObservableObject {
         conversations.first { $0.id == id }
     }
 
+    // ✅ UPDATED: preview + pas de placeholders moches
     func updateConversation(id: UUID, messages: [ChatMessage]) {
         guard let index = conversations.firstIndex(where: { $0.id == id }) else { return }
 
         var conv = conversations[index]
         conv.messages = messages
-        if let last = messages.last {
-            conv.lastMessagePreview = last.text
-        }
-        conv.updatedAt = Date()
 
+        let candidates = messages.filter { msg in
+            msg.text != "…" && msg.text != "Génération en cours…"
+        }
+
+        if conv.mode == .generateImage {
+            if let lastUser = candidates.last(where: { $0.isUser }) {
+                conv.lastMessagePreview = lastUser.text
+            } else if let last = candidates.last {
+                conv.lastMessagePreview = last.text
+            } else {
+                conv.lastMessagePreview = ""
+            }
+        } else {
+            if let last = candidates.last {
+                conv.lastMessagePreview = last.text
+            } else {
+                conv.lastMessagePreview = ""
+            }
+        }
+
+        conv.updatedAt = Date()
         conversations[index] = conv
         save()
     }

@@ -29,10 +29,60 @@ enum ChatMode: String, Codable {
 
 // MARK: - Modèles
 
+enum ChatMessageKind: String, Codable {
+    case text
+    case imageResult
+}
+
 struct ChatMessage: Identifiable, Codable {
-    var id = UUID()
+    var id: UUID = UUID()
     var text: String
     let isUser: Bool
+
+    // ✅ NEW
+    var kind: ChatMessageKind = .text
+    var imageStyle: String? = nil
+    var imageURL: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id, text, isUser, kind, imageStyle, imageURL
+    }
+
+    init(
+        id: UUID = UUID(),
+        text: String,
+        isUser: Bool,
+        kind: ChatMessageKind = .text,
+        imageStyle: String? = nil,
+        imageURL: String? = nil
+    ) {
+        self.id = id
+        self.text = text
+        self.isUser = isUser
+        self.kind = kind
+        self.imageStyle = imageStyle
+        self.imageURL = imageURL
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        text = try c.decode(String.self, forKey: .text)
+        isUser = try c.decode(Bool.self, forKey: .isUser)
+        kind = try c.decodeIfPresent(ChatMessageKind.self, forKey: .kind) ?? .text
+        imageStyle = try c.decodeIfPresent(String.self, forKey: .imageStyle)
+        imageURL = try c.decodeIfPresent(String.self, forKey: .imageURL)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(text, forKey: .text)
+        try c.encode(isUser, forKey: .isUser)
+        try c.encode(kind, forKey: .kind)
+        try c.encodeIfPresent(imageStyle, forKey: .imageStyle)
+        try c.encodeIfPresent(imageURL, forKey: .imageURL)
+    }
 }
 
 struct ChatView: View {
@@ -63,14 +113,18 @@ struct ChatView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { setupConversation() }
+        .onAppear {
+            setupConversation()
+        }
     }
 
     // MARK: - Header
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
+            Button {
+                dismiss()
+            } label: {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.08))
@@ -98,7 +152,10 @@ struct ChatView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Capsule().fill(Color.primaryGreen))
+            .background(
+                Capsule()
+                    .fill(Color.primaryGreen)
+            )
             .foregroundColor(.black)
         }
         .padding(.top, 8)
@@ -111,6 +168,7 @@ struct ChatView: View {
 
         return ScrollView {
             VStack(spacing: 16) {
+
                 if messages.isEmpty {
                     VStack(spacing: 12) {
                         Text(emptyStateText)
@@ -124,14 +182,23 @@ struct ChatView: View {
                     ForEach(messages) { message in
                         if !message.isUser && message.id == lastBotId {
                             VStack(spacing: 0) {
-                                MessageBubble(text: message.text, isUser: false)
+                                MessageBubble(
+                                    text: message.text,
+                                    isUser: false
+                                )
 
                                 HStack(spacing: 32) {
-                                    ActionChip(icon: "arrow.clockwise", title: "Régénérer") {
+                                    ActionChip(
+                                        icon: "arrow.clockwise",
+                                        title: "Régénérer"
+                                    ) {
                                         regenerateLastBotMessage()
                                     }
 
-                                    ActionChip(icon: "doc.on.doc", title: "Copier") {
+                                    ActionChip(
+                                        icon: "doc.on.doc",
+                                        title: "Copier"
+                                    ) {
                                         copyLastBotMessage()
                                     }
                                 }
@@ -145,7 +212,10 @@ struct ChatView: View {
                                 .padding(.top, 4)
                             }
                         } else {
-                            MessageBubble(text: message.text, isUser: message.isUser)
+                            MessageBubble(
+                                text: message.text,
+                                isUser: message.isUser
+                            )
                         }
                     }
                 }
@@ -178,7 +248,9 @@ struct ChatView: View {
 
             Spacer(minLength: 8)
 
-            Button { sendMessage() } label: {
+            Button {
+                sendMessage()
+            } label: {
                 ZStack {
                     Circle()
                         .fill(Color.primaryGreen)
@@ -269,8 +341,6 @@ struct ChatView: View {
         return "Impossible de contacter ChatGPT pour le moment."
     }
 
-    // MARK: - Envoi vers l’IA
-
     private func sendMessage() {
         Task { await sendMessageAsync() }
     }
@@ -326,10 +396,10 @@ struct ChatView: View {
     @MainActor
     private func regenerateAsync() async {
         if isSending { return }
+
         guard let lastBotIndex = messages.lastIndex(where: { !$0.isUser }) else { return }
 
         isSending = true
-
         messages.remove(at: lastBotIndex)
 
         let placeholderID = UUID()
@@ -412,5 +482,12 @@ struct ActionChip: View {
             .font(.system(size: 13, weight: .medium))
             .foregroundColor(Color.primaryGreen)
         }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        ChatView(mode: .assistant, conversationID: nil)
+            .environmentObject(ChatStore(userID: "preview-user"))
     }
 }

@@ -7,17 +7,27 @@
 
 import SwiftUI
 
-/// Routeur central : selon le mode, on affiche la bonne view.
 struct ChatEntryView: View {
     let mode: ChatMode
-    let conversationID: UUID?
 
     var body: some View {
         switch mode {
+        case .assistant:
+            ChatView(mode: .assistant, conversationID: nil)
+
+        case .summarizeAudio:
+            ChatView(mode: .summarizeAudio, conversationID: nil)
+
         case .generateImage:
-            GenerateImageView()
-        case .assistant, .summarizeAudio:
-            ChatView(mode: mode, conversationID: conversationID)
+            GenerateImageView(conversationID: nil)
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        ChatEntryView(mode: .assistant)
+            .environmentObject(ChatStore(userID: "preview-user"))
+    }
+}
+

@@ -1,10 +1,3 @@
-//
-//  HistoryView.swift
-//  Iakadir
-//
-//  Created by digital on 25/11/2025.
-//
-
 import SwiftUI
 
 struct HistoryView: View {
@@ -24,7 +17,6 @@ struct HistoryView: View {
 
                 header
 
-                // On calcule la liste triée une seule fois
                 let sorted = chatStore.conversations
                     .sorted { $0.updatedAt > $1.updatedAt }
 
@@ -41,7 +33,13 @@ struct HistoryView: View {
                                 let (bgColor, iconName) = iconConfig(for: conv.mode)
 
                                 NavigationLink {
-                                    ChatView(mode: conv.mode, conversationID: conv.id)
+                                    // ✅ CHANGED: open correct view
+                                    switch conv.mode {
+                                    case .generateImage:
+                                        GenerateImageView(conversationID: conv.id)
+                                    default:
+                                        ChatView(mode: conv.mode, conversationID: conv.id)
+                                    }
                                 } label: {
                                     HistoryRow(
                                         iconBackground: bgColor,
@@ -59,20 +57,15 @@ struct HistoryView: View {
                     }
                     .padding(.top, 8)
                 }
-                // 🔒 Pas de scroll si aucune conversation
                 .scrollDisabled(sorted.isEmpty)
             }
             .padding(.horizontal, 20)
             .padding(.top, 24)
             .padding(.bottom, 16)
-            // 🖼 Décor en background, en haut à droite
             .background(
                 ZStack(alignment: .topTrailing) {
                     Image("trait2")
-                        
                         .scaledToFit()
-                        
-                        
                         .offset(x: 70, y: -320)
                         .allowsHitTesting(false)
                 }
@@ -91,13 +84,9 @@ struct HistoryView: View {
         }
     }
 
-    // MARK: - Header
-
     private var header: some View {
         HStack {
-            Button {
-                dismiss()
-            } label: {
+            Button { dismiss() } label: {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.08))
@@ -121,8 +110,6 @@ struct HistoryView: View {
         }
     }
 
-    // MARK: - Icônes selon le mode
-
     private func iconConfig(for mode: ChatMode) -> (Color, String) {
         switch mode {
         case .assistant:
@@ -143,8 +130,6 @@ struct HistoryView: View {
             return "Nouvelle conversation"
         }
     }
-
-    // MARK: - Rename / delete
 
     private func prepareRename() {
         guard let id = selectedConversationID,

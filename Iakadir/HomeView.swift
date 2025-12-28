@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  Iakadir
-//
-//  Created by digital on 19/11/2025.
-//
-
 import SwiftUI
 
 struct HomeView: View {
@@ -42,11 +35,9 @@ struct HomeView: View {
             menuSheet
         }
         .toolbar(.hidden, for: .navigationBar)
-        .confirmationDialog(
-            "Options de la conversation",
-            isPresented: $showConversationOptions,
-            titleVisibility: .visible
-        ) {
+        .confirmationDialog("Options de la conversation",
+                            isPresented: $showConversationOptions,
+                            titleVisibility: .visible) {
             Button("Renommer") { prepareRename() }
             Button("Supprimer", role: .destructive) { deleteSelectedConversation() }
             Button("Annuler", role: .cancel) {}
@@ -132,7 +123,7 @@ struct HomeView: View {
     private var heroSection: some View {
         let smallHeight: CGFloat = 110
         let verticalSpacing: CGFloat = 12
-        let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing   // 232
+        let bigHeight: CGFloat = smallHeight * 2 + verticalSpacing
 
         return VStack(alignment: .leading, spacing: 60) {
             Text("Qu’est-ce que tu\nveux faire ?")
@@ -143,9 +134,8 @@ struct HomeView: View {
 
             HStack(alignment: .top, spacing: 8) {
 
-                // ✅ Résumer un son -> routeur
                 NavigationLink {
-                    ChatEntryView(mode: .summarizeAudio, conversationID: nil)
+                    ChatView(mode: .summarizeAudio, conversationID: nil)
                 } label: {
                     ActionCard(
                         title: "Résumer\nun son",
@@ -159,9 +149,8 @@ struct HomeView: View {
 
                 VStack(spacing: verticalSpacing) {
 
-                    // ✅ Parler à l’IA -> routeur
                     NavigationLink {
-                        ChatEntryView(mode: .assistant, conversationID: nil)
+                        ChatView(mode: .assistant, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Parler à l’IA",
@@ -173,9 +162,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // ✅ Générer une image -> routeur (ouvrira GenerateImageView)
+                    // ✅ CHANGED: image -> GenerateImageView
                     NavigationLink {
-                        ChatEntryView(mode: .generateImage, conversationID: nil)
+                        GenerateImageView(conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Générer une image",
@@ -209,7 +198,6 @@ struct HomeView: View {
         }
     }
 
-    // helper pour icône + couleur selon le mode
     private func iconConfig(for mode: ChatMode) -> (Color, String) {
         switch mode {
         case .assistant:
@@ -237,9 +225,14 @@ struct HomeView: View {
                 ForEach(topThree) { conv in
                     let (bgColor, iconName) = iconConfig(for: conv.mode)
 
-                    // ✅ Historique -> routeur (image ouvre GenerateImageView)
                     NavigationLink {
-                        ChatEntryView(mode: conv.mode, conversationID: conv.id)
+                        // ✅ CHANGED: open correct view per mode
+                        switch conv.mode {
+                        case .generateImage:
+                            GenerateImageView(conversationID: conv.id)
+                        default:
+                            ChatView(mode: conv.mode, conversationID: conv.id)
+                        }
                     } label: {
                         HistoryRow(
                             iconBackground: bgColor,
@@ -267,7 +260,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Menu / rename (inchangé)
+    // MARK: - Menu / rename
 
     private var menuSheet: some View {
         NavigationStack {
@@ -380,7 +373,7 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Sous-vues
+// MARK: - Sous-vues (inchangées)
 
 struct ActionCard: View {
     let title: String
@@ -464,13 +457,7 @@ struct HistoryRow: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 26)
-                .fill(
-                    Color(
-                        red: 0.13,
-                        green: 0.13,
-                        blue: 0.15
-                    )
-                )
+                .fill(Color(red: 0.13, green: 0.13, blue: 0.15))
         )
     }
 }

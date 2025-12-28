@@ -11,42 +11,22 @@ enum ImageStyle: String, CaseIterable, Identifiable {
     case pixel = "Pixel Art"
 
     var id: String { rawValue }
-
-    var promptHint: String {
-        switch self {
-        case .surreal: return "surreal, dreamlike, unexpected elements"
-        case .realistic: return "photorealistic, natural lighting, high detail"
-        case .cinematic: return "cinematic lighting, film still, dramatic mood"
-        case .anime: return "cartoon/anime style, clean lines, vibrant colors"
-        case .illustration: return "digital illustration, stylized, artistic"
-        case .threeD: return "3D render, soft shadows, high detail"
-        case .pixel: return "pixel art, 16-bit, retro game style"
-        }
-    }
-
     var lowercaseLabel: String { rawValue.lowercased() }
 }
 
 struct GenerateImageView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var chatStore: ChatStore
+
+    let conversationID: UUID?
+
+    @State private var resolvedConversationID: UUID?
+    @State private var messages: [ChatMessage] = []
 
     @State private var selectedStyle: ImageStyle = .surreal
+    @State private var inputText: String = ""
+    @State private var isSending: Bool = false
 
-    @State private var prompt: String = ""
-    @State private var lastPrompt: String = ""
-
-    // On fige le style au moment de l'envoi
-    @State private var submittedStyle: ImageStyle = .surreal
-
-    @State private var isGenerating: Bool = false
-    @State private var generatedImage: UIImage? = nil
-
-    @State private var hasSubmittedPrompt: Bool = false
-
-    // ✅ Pour différencier “envoyer” vs “régénérer”
-    @State private var lastActionWasRegenerate: Bool = false
-
-    // Une seule proposition comme la maquette
     private let suggestion: String = "Des chèvres dans l’espace"
 
     var body: some View {
@@ -57,18 +37,11 @@ struct GenerateImageView: View {
                 header
                 stylePickerRow
 
-                // suggestion avant 1er prompt
-                if !hasSubmittedPrompt {
+                if !hasAnyUserPrompt {
                     suggestionChip
                 }
 
-                promptChip
-
-                if hasSubmittedPrompt {
-                    imageCard
-                }
-
-                Spacer(minLength: 0)
+                chatContent
                 inputBar
             }
             .padding(.horizontal, 16)
@@ -76,7 +49,55 @@ struct GenerateImageView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { setupConversation() }
     }
+
+    // MARK: - Setup / Persist
+
+    private func setupConversation() {
+        if let id = resolvedConversationID,
+           let conv = chatStore.conversation(with: id) {
+            messages = conv.messages
+            ensureIntroIfNeeded()
+            return
+        }
+
+        if let passedID = conversationID,
+           let conv = chatStore.conversation(with: passedID) {
+            resolvedConversationID = conv.id
+            messages = conv.messages
+            ensureIntroIfNeeded()
+            return
+        }
+
+        let newConv = chatStore.createConversation(mode: .generateImage)
+        resolvedConversationID = newConv.id
+        messages = newConv.messages
+        ensureIntroIfNeeded()
+    }
+
+    private func persistMessages() {
+        guard let id = resolvedConversationID else { return }
+        chatStore.updateConversation(id: id, messages: messages)
+    }
+
+    private func ensureIntroIfNeeded() {
+        guard messages.isEmpty else { return }
+        messages.append(
+            ChatMessage(
+                text: "Envoie-moi un texte pour générer une image (tu peux choisir un style au-dessus).",
+                isUser: false,
+                kind: .text
+            )
+        )
+        persistMessages()
+    }
+
+    private var hasAnyUserPrompt: Bool {
+        messages.contains(where: { $0.isUser })
+    }
+
+    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -114,7 +135,8 @@ struct GenerateImageView: View {
         .padding(.top, 8)
     }
 
-    // Style picker avec underline comme ta capture
+    // MARK: - Style Picker (sans trait)
+
     private var stylePickerRow: some View {
         Menu {
             ForEach(ImageStyle.allCases) { style in
@@ -122,16 +144,9 @@ struct GenerateImageView: View {
             }
         } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Style de l’image générée")
-                        .foregroundColor(.white.opacity(0.65))
-                        .font(.system(size: 15, weight: .medium))
-
-                    Rectangle()
-                        .fill(Color.primaryGreen.opacity(0.9))
-                        .frame(width: 170, height: 2)
-                        .cornerRadius(2)
-                }
+                Text("Style de l’image générée")
+                    .foregroundColor(.white.opacity(0.65))
+                    .font(.system(size: 15, weight: .medium))
 
                 Spacer()
 
@@ -144,7 +159,7 @@ struct GenerateImageView: View {
                     .font(.system(size: 13, weight: .semibold))
             }
             .padding(.horizontal, 16)
-            .frame(height: 70)
+            .frame(height: 54)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color(red: 0.07, green: 0.08, blue: 0.16))
@@ -153,9 +168,7 @@ struct GenerateImageView: View {
     }
 
     private var suggestionChip: some View {
-        Button {
-            submitPrompt(suggestion)
-        } label: {
+        Button { sendPrompt(suggestion) } label: {
             Text(suggestion)
                 .foregroundColor(.white)
                 .font(.system(size: 16, weight: .medium))
@@ -167,104 +180,100 @@ struct GenerateImageView: View {
                         .background(Capsule().fill(Color.black.opacity(0.10)))
                 )
         }
-        .disabled(isGenerating)
-        .opacity(isGenerating ? 0.6 : 1)
+        .disabled(isSending)
+        .opacity(isSending ? 0.6 : 1)
+        .padding(.top, 2)
     }
 
-    private var promptChip: some View {
-        Group {
-            if hasSubmittedPrompt && !lastPrompt.isEmpty {
-                Text(lastPrompt)
-                    .foregroundColor(.white)
-                    .font(.system(size: 16, weight: .medium))
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                            .background(Capsule().fill(Color.black.opacity(0.15)))
-                    )
-                    .frame(maxWidth: .infinity, alignment: .center)
-            } else {
-                Color.clear.frame(height: 8)
+    // MARK: - Chat Content (même bulles que ChatView)
+
+    private var chatContent: some View {
+        let lastAssistantId = messages.last(where: { !$0.isUser })?.id
+
+        return ScrollView {
+            VStack(spacing: 16) {
+                ForEach(messages) { msg in
+                    if !msg.isUser && msg.id == lastAssistantId {
+                        VStack(spacing: 0) {
+                            assistantBubble(message: msg)
+
+                            HStack(spacing: 32) {
+                                ActionChip(icon: "arrow.clockwise", title: "Régénérer") {
+                                    regenerateLast()
+                                }
+                                ActionChip(icon: "doc.on.doc", title: "Copier") {
+                                    UIPasteboard.general.string = msg.text
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                    .fill(Color.black.opacity(0.95))
+                            )
+                            .padding(.horizontal, 4)
+                            .padding(.top, 4)
+                        }
+                    } else {
+                        if msg.isUser {
+                            MessageBubble(text: msg.text, isUser: true)
+                        } else {
+                            assistantBubble(message: msg)
+                        }
+                    }
+                }
             }
+            .padding(.horizontal, 4)
+            .padding(.top, 6)
         }
     }
 
-    private var imageCard: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(Color(red: 0.07, green: 0.08, blue: 0.16))
+    private func assistantBubble(message: ChatMessage) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 10) {
 
-                if let uiImage = generatedImage {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        .padding(10)
-                } else {
-                    VStack(spacing: 12) {
-                        Image(systemName: "photo")
-                            .font(.system(size: 34))
-                            .foregroundColor(.white.opacity(0.35))
+                if message.kind == .imageResult {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.black.opacity(0.18))
 
-                        Text(isGenerating ? "Génération en cours…" : (lastActionWasRegenerate ? quotaMessageForRegenerate() : quotaMessageForSubmit()))
-                            .foregroundColor(.white.opacity(0.75))
-                            .font(.system(size: 14, weight: .medium))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 18)
+                        VStack(spacing: 10) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 28))
+                                .foregroundColor(.white.opacity(0.35))
+
+                            if message.text == "Génération en cours…" {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            }
+                        }
                     }
+                    .frame(height: 220)
                 }
 
-                if isGenerating {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(1.2)
-                }
+                Text(message.text)
+                    .foregroundColor(.white)
+                    .font(.system(size: 15))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(height: 360)
-
-            HStack {
-                Button { regenerate() } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text("Régénérer")
-                    }
-                    .foregroundColor(Color.primaryGreen)
-                    .font(.system(size: 15, weight: .semibold))
-                }
-                .disabled(isGenerating || lastPrompt.isEmpty)
-
-                Spacer()
-
-                Button { downloadImage() } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "arrow.down")
-                        Text("Télécharger")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                    .foregroundColor(.black)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(Color.primaryGreen))
-                }
-                .disabled(generatedImage == nil)
-                .opacity(generatedImage == nil ? 0.5 : 1)
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(Color(red: 0.07, green: 0.08, blue: 0.16))
+                    .fill(Color(red: 0.13, green: 0.13, blue: 0.15))
             )
+
+            Spacer()
         }
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
     }
+
+    // MARK: - Input bar
 
     private var inputBar: some View {
         HStack {
-            TextField("Écris une demande ici", text: $prompt)
+            TextField("Écris une demande ici", text: $inputText)
                 .foregroundColor(.white)
                 .font(.system(size: 15))
                 .textInputAutocapitalization(.sentences)
@@ -274,10 +283,10 @@ struct GenerateImageView: View {
             Spacer(minLength: 8)
 
             Button {
-                let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return }
-                submitPrompt(trimmed)
-                prompt = ""
+                sendPrompt(trimmed)
+                inputText = ""
             } label: {
                 ZStack {
                     Circle()
@@ -290,8 +299,8 @@ struct GenerateImageView: View {
                 }
                 .padding(.trailing, 6)
             }
-            .disabled(isGenerating || prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .opacity((isGenerating || prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ? 0.5 : 1)
+            .disabled(isSending || inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .opacity((isSending || inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ? 0.5 : 1)
         }
         .frame(height: 56)
         .background(
@@ -302,55 +311,79 @@ struct GenerateImageView: View {
         .padding(.bottom, 4)
     }
 
-    private func quotaMessageForSubmit() -> String {
-        "Votre image \(submittedStyle.lowercaseLabel) a bien été prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+    // MARK: - Messages quota
+
+    private func quotaMessageForSubmit(style: ImageStyle) -> String {
+        "Votre image \(style.lowercaseLabel) a bien été prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
     }
 
-    private func quotaMessageForRegenerate() -> String {
-        "Votre image \(submittedStyle.lowercaseLabel) a bien été régénérée et prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+    private func quotaMessageForRegenerate(style: ImageStyle) -> String {
+        "Votre image \(style.lowercaseLabel) a bien été régénérée et prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
     }
 
-    private func submitPrompt(_ text: String) {
-        guard !isGenerating else { return }
+    // MARK: - Send / Regenerate (AJOUTE)
 
-        hasSubmittedPrompt = true
-        lastPrompt = text
+    private func sendPrompt(_ prompt: String) {
+        guard !isSending else { return }
+        isSending = true
 
-        // ✅ Le style choisi impacte le prompt (et le message)
-        submittedStyle = selectedStyle
+        let frozenStyle = selectedStyle
 
-        // ✅ C’est un “envoi”, pas une regen
-        lastActionWasRegenerate = false
+        messages.append(ChatMessage(text: prompt, isUser: true, kind: .text))
 
-        isGenerating = true
-        generatedImage = nil
+        let placeholderID = UUID()
+        messages.append(
+            ChatMessage(
+                id: placeholderID,
+                text: "Génération en cours…",
+                isUser: false,
+                kind: .imageResult,
+                imageStyle: frozenStyle.rawValue
+            )
+        )
+        persistMessages()
 
-        // MOCK : on “termine” sans image => message quota
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            isGenerating = false
-            generatedImage = nil
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = quotaMessageForSubmit(style: frozenStyle)
+            }
+            persistMessages()
+            isSending = false
         }
     }
 
-    private func regenerate() {
-        guard !lastPrompt.isEmpty, !isGenerating else { return }
+    private func regenerateLast() {
+        guard !isSending else { return }
+        guard messages.contains(where: { $0.isUser }) else { return }
 
-        lastActionWasRegenerate = true
-        isGenerating = true
-        generatedImage = nil
+        isSending = true
+        let frozenStyle = selectedStyle
+
+        let placeholderID = UUID()
+        messages.append(
+            ChatMessage(
+                id: placeholderID,
+                text: "Génération en cours…",
+                isUser: false,
+                kind: .imageResult,
+                imageStyle: frozenStyle.rawValue
+            )
+        )
+        persistMessages()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            isGenerating = false
-            generatedImage = nil
+            if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
+                messages[idx].text = quotaMessageForRegenerate(style: frozenStyle)
+            }
+            persistMessages()
+            isSending = false
         }
-    }
-
-    private func downloadImage() {
-        guard let img = generatedImage else { return }
-        UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
     }
 }
 
 #Preview {
-    GenerateImageView()
+    NavigationStack {
+        GenerateImageView(conversationID: nil)
+            .environmentObject(ChatStore(userID: "preview-user"))
+    }
 }
