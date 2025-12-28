@@ -1,39 +1,26 @@
-//
-//  ChatView.swift
-//  Iakadir
-//
-//  Created by digital on 24/11/2025.
-//
-
 import SwiftUI
 import UIKit
 
 // MARK: - Mode de chat
 
 enum ChatMode: String, Codable {
-    case assistant       // Parler à l’IA
-    case summarizeAudio  // Résumer un son
-    case generateImage   // Générer une image
+    case assistant
+    case summarizeAudio
+    case generateImage
 
     var title: String {
         switch self {
-        case .assistant:
-            return "Parler à l’IA"
-        case .summarizeAudio:
-            return "Résumer un son"
-        case .generateImage:
-            return "Générer une image"
+        case .assistant: return "Parler à l’IA"
+        case .summarizeAudio: return "Résumer un son"
+        case .generateImage: return "Générer une image"
         }
     }
 
     var placeholder: String {
         switch self {
-        case .assistant:
-            return "Écris une demande ici"
-        case .summarizeAudio:
-            return "Décris ton audio ou colle un lien ici"
-        case .generateImage:
-            return "Décris l’image que tu veux créer"
+        case .assistant: return "Écris une demande ici"
+        case .summarizeAudio: return "Décris ton audio ou colle un lien ici"
+        case .generateImage: return "Décris l’image que tu veux créer"
         }
     }
 
@@ -76,18 +63,14 @@ struct ChatView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            setupConversation()
-        }
+        .onAppear { setupConversation() }
     }
 
     // MARK: - Header
 
     private var header: some View {
         HStack {
-            Button {
-                dismiss()
-            } label: {
+            Button { dismiss() } label: {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.08))
@@ -115,10 +98,7 @@ struct ChatView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(Color.primaryGreen)
-            )
+            .background(Capsule().fill(Color.primaryGreen))
             .foregroundColor(.black)
         }
         .padding(.top, 8)
@@ -131,7 +111,6 @@ struct ChatView: View {
 
         return ScrollView {
             VStack(spacing: 16) {
-
                 if messages.isEmpty {
                     VStack(spacing: 12) {
                         Text(emptyStateText)
@@ -145,23 +124,14 @@ struct ChatView: View {
                     ForEach(messages) { message in
                         if !message.isUser && message.id == lastBotId {
                             VStack(spacing: 0) {
-                                MessageBubble(
-                                    text: message.text,
-                                    isUser: false
-                                )
+                                MessageBubble(text: message.text, isUser: false)
 
                                 HStack(spacing: 32) {
-                                    ActionChip(
-                                        icon: "arrow.clockwise",
-                                        title: "Régénérer"
-                                    ) {
+                                    ActionChip(icon: "arrow.clockwise", title: "Régénérer") {
                                         regenerateLastBotMessage()
                                     }
 
-                                    ActionChip(
-                                        icon: "doc.on.doc",
-                                        title: "Copier"
-                                    ) {
+                                    ActionChip(icon: "doc.on.doc", title: "Copier") {
                                         copyLastBotMessage()
                                     }
                                 }
@@ -175,10 +145,7 @@ struct ChatView: View {
                                 .padding(.top, 4)
                             }
                         } else {
-                            MessageBubble(
-                                text: message.text,
-                                isUser: message.isUser
-                            )
+                            MessageBubble(text: message.text, isUser: message.isUser)
                         }
                     }
                 }
@@ -211,9 +178,7 @@ struct ChatView: View {
 
             Spacer(minLength: 8)
 
-            Button {
-                sendMessage()
-            } label: {
+            Button { sendMessage() } label: {
                 ZStack {
                     Circle()
                         .fill(Color.primaryGreen)
@@ -239,14 +204,12 @@ struct ChatView: View {
     // MARK: - Logique conversation
 
     private func setupConversation() {
-        // 1) Si déjà résolue
         if let id = resolvedConversationID,
            let conv = chatStore.conversation(with: id) {
             messages = conv.messages
             return
         }
 
-        // 2) Si on a reçu un ID existant
         if let passedID = conversationID,
            let conv = chatStore.conversation(with: passedID) {
             resolvedConversationID = conv.id
@@ -254,7 +217,6 @@ struct ChatView: View {
             return
         }
 
-        // 3) Nouvelle conversation avec CE mode
         let newConv = chatStore.createConversation(mode: mode)
         resolvedConversationID = newConv.id
         messages = newConv.messages
@@ -265,7 +227,6 @@ struct ChatView: View {
         chatStore.updateConversation(id: id, messages: messages)
     }
 
-    // Transforme ton historique en format API (on évite le placeholder "…")
     private func openAIInput(from messages: [ChatMessage], limit: Int = 20) -> [OpenAIInputMessage] {
         let filtered = messages.filter { !(!$0.isUser && $0.text == "…") }
         let slice = filtered.suffix(limit)
@@ -285,7 +246,6 @@ struct ChatView: View {
         }
     }
 
-    // ✅ Détection quota/billing + message UX personnalisé
     private func isQuotaOrBillingError(_ error: Error) -> Bool {
         let desc = (error as NSError).localizedDescription.lowercased()
         return desc.contains("insufficient_quota")
@@ -324,11 +284,9 @@ struct ChatView: View {
 
         isSending = true
 
-        // 1) Ajoute le message user
         messages.append(ChatMessage(text: trimmed, isUser: true))
         inputText = ""
 
-        // 2) Placeholder bot
         let placeholderID = UUID()
         messages.append(ChatMessage(id: placeholderID, text: "…", isUser: false))
         persistMessages()
@@ -361,8 +319,6 @@ struct ChatView: View {
         isSending = false
     }
 
-    // MARK: - Régénérer / Copier
-
     private func regenerateLastBotMessage() {
         Task { await regenerateAsync() }
     }
@@ -370,15 +326,12 @@ struct ChatView: View {
     @MainActor
     private func regenerateAsync() async {
         if isSending { return }
-
         guard let lastBotIndex = messages.lastIndex(where: { !$0.isUser }) else { return }
 
         isSending = true
 
-        // Retire la dernière réponse bot
         messages.remove(at: lastBotIndex)
 
-        // Placeholder
         let placeholderID = UUID()
         messages.append(ChatMessage(id: placeholderID, text: "…", isUser: false))
         persistMessages()
@@ -459,12 +412,5 @@ struct ActionChip: View {
             .font(.system(size: 13, weight: .medium))
             .foregroundColor(Color.primaryGreen)
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        ChatView(mode: .assistant, conversationID: nil)
-            .environmentObject(ChatStore(userID: "preview-user"))
     }
 }

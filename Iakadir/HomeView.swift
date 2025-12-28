@@ -26,7 +26,6 @@ struct HomeView: View {
             Color.black.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 24) {
-
                 header
                 heroSection
 
@@ -43,9 +42,11 @@ struct HomeView: View {
             menuSheet
         }
         .toolbar(.hidden, for: .navigationBar)
-        .confirmationDialog("Options de la conversation",
-                            isPresented: $showConversationOptions,
-                            titleVisibility: .visible) {
+        .confirmationDialog(
+            "Options de la conversation",
+            isPresented: $showConversationOptions,
+            titleVisibility: .visible
+        ) {
             Button("Renommer") { prepareRename() }
             Button("Supprimer", role: .destructive) { deleteSelectedConversation() }
             Button("Annuler", role: .cancel) {}
@@ -142,8 +143,9 @@ struct HomeView: View {
 
             HStack(alignment: .top, spacing: 8) {
 
+                // ✅ Résumer un son -> routeur
                 NavigationLink {
-                    ChatView(mode: .summarizeAudio, conversationID: nil)
+                    ChatEntryView(mode: .summarizeAudio, conversationID: nil)
                 } label: {
                     ActionCard(
                         title: "Résumer\nun son",
@@ -157,8 +159,9 @@ struct HomeView: View {
 
                 VStack(spacing: verticalSpacing) {
 
+                    // ✅ Parler à l’IA -> routeur
                     NavigationLink {
-                        ChatView(mode: .assistant, conversationID: nil)
+                        ChatEntryView(mode: .assistant, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Parler à l’IA",
@@ -170,8 +173,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
+                    // ✅ Générer une image -> routeur (ouvrira GenerateImageView)
                     NavigationLink {
-                        ChatView(mode: .generateImage, conversationID: nil)
+                        ChatEntryView(mode: .generateImage, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Générer une image",
@@ -233,8 +237,9 @@ struct HomeView: View {
                 ForEach(topThree) { conv in
                     let (bgColor, iconName) = iconConfig(for: conv.mode)
 
+                    // ✅ Historique -> routeur (image ouvre GenerateImageView)
                     NavigationLink {
-                        ChatView(mode: conv.mode, conversationID: conv.id)
+                        ChatEntryView(mode: conv.mode, conversationID: conv.id)
                     } label: {
                         HistoryRow(
                             iconBackground: bgColor,
@@ -464,12 +469,11 @@ struct HistoryRow: View {
                         red: 0.13,
                         green: 0.13,
                         blue: 0.15
-                    ) // 🔒 fond opaque, plus de transparence
+                    )
                 )
         )
     }
 }
-
 
 #Preview {
     NavigationStack {
