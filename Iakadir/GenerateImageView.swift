@@ -77,10 +77,7 @@ struct GenerateImageView: View {
         HStack {
             Button { dismiss() } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 40, height: 40)
-
+                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
@@ -96,10 +93,8 @@ struct GenerateImageView: View {
             Spacer()
 
             HStack(spacing: 6) {
-                Text("GPT-4")
-                    .font(.system(size: 13, weight: .semibold))
-                Image(systemName: "sparkles")
-                    .font(.system(size: 12, weight: .medium))
+                Text("GPT-4").font(.system(size: 13, weight: .semibold))
+                Image(systemName: "sparkles").font(.system(size: 12, weight: .medium))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -109,7 +104,7 @@ struct GenerateImageView: View {
         .padding(.top, 8)
     }
 
-    // MARK: - Style Picker (sans trait)
+    // MARK: - Style Picker
 
     private var stylePickerRow: some View {
         Menu {
@@ -141,15 +136,13 @@ struct GenerateImageView: View {
         }
     }
 
-    // MARK: - Chat Content
+    // MARK: - Chat
 
     private var chatContent: some View {
         let lastAssistantId = messages.last(where: { !$0.isUser })?.id
 
         return ScrollView {
             VStack(spacing: 16) {
-
-                // ✅ Empty state = juste du texte blanc (UI), pas un message IA stocké
                 if messages.isEmpty {
                     Text("Décris l’image que tu veux générer.")
                         .foregroundColor(.white.opacity(0.7))
@@ -236,7 +229,7 @@ struct GenerateImageView: View {
         .padding(.horizontal, 4)
     }
 
-    // MARK: - Input bar
+    // MARK: - Input
 
     private var inputBar: some View {
         HStack {
@@ -256,10 +249,7 @@ struct GenerateImageView: View {
                 inputText = ""
             } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.primaryGreen)
-                        .frame(width: 42, height: 42)
-
+                    Circle().fill(Color.primaryGreen).frame(width: 42, height: 42)
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.black)
                         .font(.system(size: 18, weight: .semibold))
@@ -278,7 +268,7 @@ struct GenerateImageView: View {
         .padding(.bottom, 4)
     }
 
-    // MARK: - Messages quota
+    // MARK: - Quota messages
 
     private func quotaMessageForSubmit(style: ImageStyle) -> String {
         "Votre image \(style.lowercaseLabel) a bien été prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
@@ -288,7 +278,7 @@ struct GenerateImageView: View {
         "Votre image \(style.lowercaseLabel) a bien été régénérée et prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
     }
 
-    // MARK: - Send / Regenerate
+    // MARK: - Send / Regenerate (ajoute, ne remplace rien)
 
     private func sendPrompt(_ prompt: String) {
         guard !isSending else { return }
@@ -296,10 +286,8 @@ struct GenerateImageView: View {
 
         let frozenStyle = selectedStyle
 
-        // user prompt
         messages.append(ChatMessage(text: prompt, isUser: true, kind: .text))
 
-        // assistant placeholder (image result)
         let placeholderID = UUID()
         messages.append(
             ChatMessage(

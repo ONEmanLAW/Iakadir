@@ -117,7 +117,6 @@ final class ChatStore: ObservableObject {
         conversations.first { $0.id == id }
     }
 
-    // ✅ UPDATED: preview + pas de placeholders moches
     func updateConversation(id: UUID, messages: [ChatMessage]) {
         guard let index = conversations.firstIndex(where: { $0.id == id }) else { return }
 

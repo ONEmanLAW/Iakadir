@@ -14,11 +14,9 @@ struct HistoryView: View {
             Color.black.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 24) {
-
                 header
 
-                let sorted = chatStore.conversations
-                    .sorted { $0.updatedAt > $1.updatedAt }
+                let sorted = chatStore.conversations.sorted { $0.updatedAt > $1.updatedAt }
 
                 ScrollView {
                     VStack(spacing: 12) {
@@ -33,13 +31,7 @@ struct HistoryView: View {
                                 let (bgColor, iconName) = iconConfig(for: conv.mode)
 
                                 NavigationLink {
-                                    // ✅ CHANGED: open correct view
-                                    switch conv.mode {
-                                    case .generateImage:
-                                        GenerateImageView(conversationID: conv.id)
-                                    default:
-                                        ChatView(mode: conv.mode, conversationID: conv.id)
-                                    }
+                                    ChatEntryView(mode: conv.mode, conversationID: conv.id)
                                 } label: {
                                     HistoryRow(
                                         iconBackground: bgColor,
@@ -88,10 +80,7 @@ struct HistoryView: View {
         HStack {
             Button { dismiss() } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 40, height: 40)
-
+                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
@@ -122,13 +111,9 @@ struct HistoryView: View {
     }
 
     private func displayText(for conv: Conversation) -> String {
-        if !conv.title.isEmpty {
-            return conv.title
-        } else if !conv.lastMessagePreview.isEmpty {
-            return conv.lastMessagePreview
-        } else {
-            return "Nouvelle conversation"
-        }
+        if !conv.title.isEmpty { return conv.title }
+        if !conv.lastMessagePreview.isEmpty { return conv.lastMessagePreview }
+        return "Nouvelle conversation"
     }
 
     private func prepareRename() {

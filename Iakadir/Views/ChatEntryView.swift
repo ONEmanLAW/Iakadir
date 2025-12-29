@@ -9,24 +9,25 @@ import SwiftUI
 
 struct ChatEntryView: View {
     let mode: ChatMode
+    let conversationID: UUID?
 
     var body: some View {
         switch mode {
         case .assistant:
-            ChatView(mode: .assistant, conversationID: nil)
+            ChatView(conversationID: conversationID)
 
         case .summarizeAudio:
-            ChatView(mode: .summarizeAudio, conversationID: nil)
+            SummarizeAudioView(conversationID: conversationID)
 
         case .generateImage:
-            GenerateImageView(conversationID: nil)
+            GenerateImageView(conversationID: conversationID)
         }
     }
 }
 
 #Preview {
     NavigationStack {
-        ChatEntryView(mode: .assistant)
+        ChatEntryView(mode: .assistant, conversationID: nil)
             .environmentObject(ChatStore(userID: "preview-user"))
     }
 }

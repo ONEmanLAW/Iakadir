@@ -1,93 +1,7 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Mode de chat
-
-enum ChatMode: String, Codable {
-    case assistant
-    case summarizeAudio
-    case generateImage
-
-    var title: String {
-        switch self {
-        case .assistant: return "Parler à l’IA"
-        case .summarizeAudio: return "Résumer un son"
-        case .generateImage: return "Générer une image"
-        }
-    }
-
-    var placeholder: String {
-        switch self {
-        case .assistant: return "Écris une demande ici"
-        case .summarizeAudio: return "Décris ton audio ou colle un lien ici"
-        case .generateImage: return "Décris l’image que tu veux créer"
-        }
-    }
-
-    var chipLabel: String { "GPT-4" }
-}
-
-// MARK: - Modèles
-
-enum ChatMessageKind: String, Codable {
-    case text
-    case imageResult
-}
-
-struct ChatMessage: Identifiable, Codable {
-    var id: UUID = UUID()
-    var text: String
-    let isUser: Bool
-
-    // NEW
-    var kind: ChatMessageKind = .text
-    var imageStyle: String? = nil
-    var imageURL: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case id, text, isUser, kind, imageStyle, imageURL
-    }
-
-    init(
-        id: UUID = UUID(),
-        text: String,
-        isUser: Bool,
-        kind: ChatMessageKind = .text,
-        imageStyle: String? = nil,
-        imageURL: String? = nil
-    ) {
-        self.id = id
-        self.text = text
-        self.isUser = isUser
-        self.kind = kind
-        self.imageStyle = imageStyle
-        self.imageURL = imageURL
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-        text = try c.decode(String.self, forKey: .text)
-        isUser = try c.decode(Bool.self, forKey: .isUser)
-        kind = try c.decodeIfPresent(ChatMessageKind.self, forKey: .kind) ?? .text
-        imageStyle = try c.decodeIfPresent(String.self, forKey: .imageStyle)
-        imageURL = try c.decodeIfPresent(String.self, forKey: .imageURL)
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(text, forKey: .text)
-        try c.encode(isUser, forKey: .isUser)
-        try c.encode(kind, forKey: .kind)
-        try c.encodeIfPresent(imageStyle, forKey: .imageStyle)
-        try c.encodeIfPresent(imageURL, forKey: .imageURL)
-    }
-}
-
-// MARK: - ChatView (assistant)
-
-struct ChatView: View {
+struct SummarizeAudioView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var chatStore: ChatStore
 
@@ -121,9 +35,7 @@ struct ChatView: View {
         HStack {
             Button { dismiss() } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 40, height: 40)
+                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
@@ -132,17 +44,15 @@ struct ChatView: View {
 
             Spacer()
 
-            Text("Parler à l’IA")
+            Text("Résumer un son")
                 .foregroundColor(.white)
                 .font(.system(size: 17, weight: .semibold))
 
             Spacer()
 
             HStack(spacing: 6) {
-                Text("GPT-4")
-                    .font(.system(size: 13, weight: .semibold))
-                Image(systemName: "sparkles")
-                    .font(.system(size: 12, weight: .medium))
+                Text("GPT-4").font(.system(size: 13, weight: .semibold))
+                Image(systemName: "sparkles").font(.system(size: 12, weight: .medium))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -158,7 +68,7 @@ struct ChatView: View {
         return ScrollView {
             VStack(spacing: 16) {
                 if messages.isEmpty {
-                    Text("Pose-moi une question pour commencer.")
+                    Text("Décris ton audio ou colle un lien ici.")
                         .foregroundColor(.white.opacity(0.7))
                         .font(.system(size: 15))
                         .multilineTextAlignment(.center)
@@ -199,10 +109,10 @@ struct ChatView: View {
 
     private var inputBar: some View {
         HStack {
-            TextField("Écris une demande ici", text: $inputText)
+            TextField("Décris ton audio ou colle un lien ici", text: $inputText)
                 .foregroundColor(.white)
                 .font(.system(size: 15))
-                .textInputAutocapitalization(.never)
+                .textInputAutocapitalization(.sentences)
                 .disableAutocorrection(true)
                 .padding(.leading, 20)
 
@@ -244,7 +154,7 @@ struct ChatView: View {
             return
         }
 
-        let newConv = chatStore.createConversation(mode: .assistant)
+        let newConv = chatStore.createConversation(mode: .summarizeAudio)
         resolvedConversationID = newConv.id
         messages = newConv.messages
     }
@@ -263,7 +173,7 @@ struct ChatView: View {
     }
 
     private func instructions() -> String {
-        "Tu es un assistant utile, clair et concis."
+        "Tu résumes un audio à partir d'une description texte. Fais un résumé clair + des points clés."
     }
 
     private func isQuotaOrBillingError(_ error: Error) -> Bool {
@@ -277,14 +187,14 @@ struct ChatView: View {
 
     private func userFriendlyErrorTextForSend(_ error: Error) -> String {
         if isQuotaOrBillingError(error) {
-            return "Ton message a bien été pris en compte par ChatGPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+            return "Ton résumé a bien été pris en compte par ChatGPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
         }
         return "Impossible de contacter ChatGPT pour le moment."
     }
 
     private func userFriendlyErrorTextForRegenerate(_ error: Error) -> String {
         if isQuotaOrBillingError(error) {
-            return "Ton message a bien été régénéré et pris en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
+            return "Ton résumé a bien été régénéré et pris en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
         }
         return "Impossible de contacter ChatGPT pour le moment."
     }
@@ -373,56 +283,9 @@ struct ChatView: View {
     }
 }
 
-// MARK: - UI components partagés
-
-struct MessageBubble: View {
-    let text: String
-    let isUser: Bool
-
-    var body: some View {
-        HStack {
-            if isUser { Spacer() }
-
-            Text(text)
-                .foregroundColor(.white)
-                .font(.system(size: 15))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(isUser
-                              ? Color(red: 0.06, green: 0.07, blue: 0.20)
-                              : Color(red: 0.13, green: 0.13, blue: 0.15))
-                )
-                .fixedSize(horizontal: false, vertical: true)
-
-            if !isUser { Spacer() }
-        }
-        .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
-        .padding(.horizontal, 4)
-    }
-}
-
-struct ActionChip: View {
-    let icon: String
-    let title: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                Text(title)
-            }
-            .font(.system(size: 13, weight: .medium))
-            .foregroundColor(Color.primaryGreen)
-        }
-    }
-}
-
 #Preview {
     NavigationStack {
-        ChatView(conversationID: nil)
+        SummarizeAudioView(conversationID: nil)
             .environmentObject(ChatStore(userID: "preview-user"))
     }
 }

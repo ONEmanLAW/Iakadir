@@ -21,10 +21,8 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
                 heroSection
-
                 historyHeader
                 historyList
-
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 14)
@@ -62,18 +60,11 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Header
-
     private var header: some View {
         HStack(spacing: 12) {
-            Button {
-                showMenu = true
-            } label: {
+            Button { showMenu = true } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 40, height: 40)
-
+                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
                     Image(systemName: "line.3.horizontal")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
@@ -91,14 +82,11 @@ struct HomeView: View {
 
             Spacer()
 
-            NavigationLink {
-                PaywallView()
-            } label: {
+            NavigationLink { PaywallView() } label: {
                 HStack(spacing: 6) {
                     Text("PRO")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
-
                     Image(systemName: "sparkles")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.primaryGreen)
@@ -108,17 +96,12 @@ struct HomeView: View {
                 .background(
                     Capsule()
                         .fill(Color(red: 18/255, green: 18/255, blue: 36/255))
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.primaryGreen, lineWidth: 1.5)
-                        )
+                        .overlay(Capsule().stroke(Color.primaryGreen, lineWidth: 1.5))
                 )
             }
             .buttonStyle(.plain)
         }
     }
-
-    // MARK: - Hero
 
     private var heroSection: some View {
         let smallHeight: CGFloat = 110
@@ -135,7 +118,7 @@ struct HomeView: View {
             HStack(alignment: .top, spacing: 8) {
 
                 NavigationLink {
-                    ChatView(mode: .summarizeAudio, conversationID: nil)
+                    ChatEntryView(mode: .summarizeAudio, conversationID: nil)
                 } label: {
                     ActionCard(
                         title: "Résumer\nun son",
@@ -150,7 +133,7 @@ struct HomeView: View {
                 VStack(spacing: verticalSpacing) {
 
                     NavigationLink {
-                        ChatView(mode: .assistant, conversationID: nil)
+                        ChatEntryView(mode: .assistant, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Parler à l’IA",
@@ -162,9 +145,8 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // ✅ CHANGED: image -> GenerateImageView
                     NavigationLink {
-                        GenerateImageView(conversationID: nil)
+                        ChatEntryView(mode: .generateImage, conversationID: nil)
                     } label: {
                         ActionCard(
                             title: "Générer une image",
@@ -180,17 +162,13 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Historique
-
     private var historyHeader: some View {
         HStack {
             Text("Historique")
                 .foregroundColor(.white)
                 .font(.system(size: 20, weight: .semibold))
             Spacer()
-            NavigationLink {
-                HistoryView()
-            } label: {
+            NavigationLink { HistoryView() } label: {
                 Text("Voir tout")
                     .foregroundColor(.white.opacity(0.6))
                     .font(.system(size: 14, weight: .medium))
@@ -226,13 +204,7 @@ struct HomeView: View {
                     let (bgColor, iconName) = iconConfig(for: conv.mode)
 
                     NavigationLink {
-                        // ✅ CHANGED: open correct view per mode
-                        switch conv.mode {
-                        case .generateImage:
-                            GenerateImageView(conversationID: conv.id)
-                        default:
-                            ChatView(mode: conv.mode, conversationID: conv.id)
-                        }
+                        ChatEntryView(mode: conv.mode, conversationID: conv.id)
                     } label: {
                         HistoryRow(
                             iconBackground: bgColor,
@@ -251,16 +223,12 @@ struct HomeView: View {
     }
 
     private func displayText(for conv: Conversation) -> String {
-        if !conv.title.isEmpty {
-            return conv.title
-        } else if !conv.lastMessagePreview.isEmpty {
-            return conv.lastMessagePreview
-        } else {
-            return "Nouvelle conversation"
-        }
+        if !conv.title.isEmpty { return conv.title }
+        if !conv.lastMessagePreview.isEmpty { return conv.lastMessagePreview }
+        return "Nouvelle conversation"
     }
 
-    // MARK: - Menu / rename
+    // MARK: - Menu / rename (inchangé)
 
     private var menuSheet: some View {
         NavigationStack {
