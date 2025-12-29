@@ -14,7 +14,6 @@ struct SummarizeAudioView: View {
     @State private var inputText: String = ""
     @State private var isSending: Bool = false
 
-    // ✅ Import audio
     @State private var showImporter: Bool = false
     @State private var audioURL: URL?
     @State private var audioData: Data?
@@ -57,10 +56,7 @@ struct SummarizeAudioView: View {
         HStack {
             Button { dismiss() } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 40, height: 40)
-
+                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
@@ -76,10 +72,8 @@ struct SummarizeAudioView: View {
             Spacer()
 
             HStack(spacing: 6) {
-                Text("GPT-4")
-                    .font(.system(size: 13, weight: .semibold))
-                Image(systemName: "sparkles")
-                    .font(.system(size: 12, weight: .medium))
+                Text("GPT-4").font(.system(size: 13, weight: .semibold))
+                Image(systemName: "sparkles").font(.system(size: 12, weight: .medium))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -89,12 +83,10 @@ struct SummarizeAudioView: View {
         .padding(.top, 8)
     }
 
-    // MARK: - Audio pill
 
     private var selectedAudioPill: some View {
         HStack(spacing: 10) {
-            Image(systemName: "waveform")
-                .foregroundColor(.white.opacity(0.85))
+            Image(systemName: "waveform").foregroundColor(.white.opacity(0.85))
 
             Text(audioFilename.isEmpty ? "Fichier audio" : audioFilename)
                 .foregroundColor(.white)
@@ -132,7 +124,7 @@ struct SummarizeAudioView: View {
         return ScrollView {
             VStack(spacing: 16) {
                 if messages.isEmpty {
-                    Text("Importe un fichier .mp3 puis écris ta demande (ex: “transcris et traduis en français”).")
+                    Text("Importe un fichier .mp3 puis écris ta demande (ex: “transcris le message”).")
                         .foregroundColor(.white.opacity(0.7))
                         .font(.system(size: 15))
                         .multilineTextAlignment(.center)
@@ -172,16 +164,11 @@ struct SummarizeAudioView: View {
         }
     }
 
-    // MARK: - Input bar
-
     private var inputBar: some View {
         HStack(spacing: 10) {
             Button { showImporter = true } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.10))
-                        .frame(width: 38, height: 38)
-
+                    Circle().fill(Color.white.opacity(0.10)).frame(width: 38, height: 38)
                     Image(systemName: "paperclip")
                         .foregroundColor(.white.opacity(0.9))
                         .font(.system(size: 16, weight: .semibold))
@@ -215,8 +202,6 @@ struct SummarizeAudioView: View {
         .padding(.bottom, 4)
     }
 
-    // MARK: - Conversation store
-
     private func setupConversation() {
         if let id = resolvedConversationID,
            let conv = chatStore.conversation(with: id) {
@@ -240,8 +225,6 @@ struct SummarizeAudioView: View {
         guard let id = resolvedConversationID else { return }
         chatStore.updateConversation(id: id, messages: messages)
     }
-
-    // MARK: - Importer
 
     private func allowedAudioTypes() -> [UTType] {
         var types: [UTType] = []
@@ -268,7 +251,7 @@ struct SummarizeAudioView: View {
                 audioData = data
                 audioFilename = url.lastPathComponent
 
-                appendBot("Fichier importé ✅ Maintenant écris ta demande (transcrire / traduire…).")
+                appendBot("Fichier importé. Maintenant écris ta demande (transcrire / traduire…).")
                 persistMessages()
             } catch {
                 appendBot("Impossible de lire ce fichier audio.")
@@ -277,11 +260,7 @@ struct SummarizeAudioView: View {
         }
     }
 
-    // MARK: - Envoi / Régénérer
-
-    private func sendMessage() {
-        Task { await sendMessageAsync() }
-    }
+    private func sendMessage() { Task { await sendMessageAsync() } }
 
     @MainActor
     private func sendMessageAsync() async {
@@ -290,31 +269,18 @@ struct SummarizeAudioView: View {
         let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        // 1) Bloque si pas de mp3
         guard let audioData, audioURL != nil else {
             inputText = ""
-            appendBot("Non 😅 Il faut d’abord importer un fichier .mp3 (bouton trombone).")
-            persistMessages()
-            return
-        }
-
-        // 2) Bloque si fichier trop gros (très souvent la cause n°1)
-        //    ⚠️ Base64 gonfle la taille, donc on limite (ex: 6MB)
-        let maxBytes = 6 * 1024 * 1024
-        if audioData.count > maxBytes {
-            inputText = ""
-            appendBot("Ton mp3 est trop gros pour l’instant 😅 Prends un fichier plus court (≈ 6 Mo max).")
+            appendBot("Non. Il faut d’abord importer un fichier .mp3 (bouton trombone).")
             persistMessages()
             return
         }
 
         isSending = true
 
-        // user message
         messages.append(ChatMessage(text: trimmed, isUser: true, kind: .text))
         inputText = ""
 
-        // placeholder bot
         let placeholderID = UUID()
         messages.append(ChatMessage(id: placeholderID, text: "…", isUser: false, kind: .text))
         persistMessages()
@@ -332,11 +298,10 @@ struct SummarizeAudioView: View {
             } else {
                 messages.append(ChatMessage(text: reply, isUser: false, kind: .text))
             }
-
             persistMessages()
+
         } catch {
-            // ✅ IMPORTANT: on log la vraie erreur en console (mais on affiche propre dans l’UI)
-            print("❌ OpenAI Audio error:", (error as NSError).localizedDescription)
+            print("AUDIO RAW ERROR:", (error as NSError).localizedDescription)
 
             let msg = userFriendlyErrorTextForSend(error)
             if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
@@ -350,9 +315,7 @@ struct SummarizeAudioView: View {
         isSending = false
     }
 
-    private func regenerateLastBotMessage() {
-        Task { await regenerateAsync() }
-    }
+    private func regenerateLastBotMessage() { Task { await regenerateAsync() } }
 
     @MainActor
     private func regenerateAsync() async {
@@ -369,7 +332,6 @@ struct SummarizeAudioView: View {
 
         isSending = true
 
-        // remove last bot
         messages.remove(at: lastBotIndex)
 
         let placeholderID = UUID()
@@ -389,10 +351,10 @@ struct SummarizeAudioView: View {
             } else {
                 messages.append(ChatMessage(text: reply, isUser: false, kind: .text))
             }
-
             persistMessages()
+
         } catch {
-            print("❌ OpenAI Audio regen error:", (error as NSError).localizedDescription)
+            print("AUDIO RAW ERROR (regen):", (error as NSError).localizedDescription)
 
             let msg = userFriendlyErrorTextForRegenerate(error)
             if let idx = messages.firstIndex(where: { $0.id == placeholderID }) {
@@ -404,41 +366,57 @@ struct SummarizeAudioView: View {
         isSending = false
     }
 
-    // MARK: - Erreurs UX propres (plus précises)
+
+    private func errorSearchText(_ error: Error) -> String {
+        let desc = (error as NSError).localizedDescription
+
+        if let data = desc.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data),
+           let flattened = flattenJSONStrings(json) {
+            return flattened.lowercased()
+        }
+
+        return desc.lowercased()
+    }
+
+    private func flattenJSONStrings(_ json: Any) -> String? {
+        var parts: [String] = []
+
+        func walk(_ value: Any) {
+            if let s = value as? String {
+                parts.append(s)
+            } else if let n = value as? NSNumber {
+                parts.append(n.stringValue)
+            } else if let dict = value as? [String: Any] {
+                for (_, v) in dict { walk(v) }
+            } else if let arr = value as? [Any] {
+                for v in arr { walk(v) }
+            }
+        }
+
+        walk(json)
+        return parts.isEmpty ? nil : parts.joined(separator: " | ")
+    }
 
     private func isQuotaOrBillingError(_ error: Error) -> Bool {
-        let desc = (error as NSError).localizedDescription.lowercased()
-        return desc.contains("insufficient_quota")
-            || desc.contains("exceeded your current quota")
-            || desc.contains("quota")
-            || desc.contains("billing")
-            || desc.contains("plan and billing")
+        let t = errorSearchText(error)
+        return t.contains("insufficient_quota")
+            || t.contains("exceeded your current quota")
+            || t.contains("plan and billing")
+            || t.contains("billing")
+            || t.contains("payment")
+            || t.contains("paid plan")
+            || t.contains("add a payment method")
+            || t.contains("quota")
+            || t.contains("credit")
+            || t.contains("credits")
+            || t.contains("balance")
     }
 
     private func userFriendlyErrorTextForSend(_ error: Error) -> String {
-        let desc = (error as NSError).localizedDescription.lowercased()
-
         if isQuotaOrBillingError(error) {
             return "Ton mp3 et ta demande ont bien été pris en compte par ChatGPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."
         }
-
-        // Cas très fréquents :
-        if desc.contains("missing openai_api_key") || desc.contains("missing") && desc.contains("openai") {
-            return "Ça a bien touché Supabase, mais il manque la clé OPENAI_API_KEY dans les Secrets."
-        }
-
-        if desc.contains("\"status\":401") || desc.contains("401") || desc.contains("unauthorized") {
-            return "La function refuse l’accès (401). Vérifie “Verify JWT” (OFF) ou que l’utilisateur est connecté."
-        }
-
-        if desc.contains("413") || desc.contains("payload too large") || desc.contains("entity too large") {
-            return "Ton mp3 est trop gros pour la function. Prends un fichier plus court."
-        }
-
-        if desc.contains("audio") && desc.contains("format") {
-            return "Format audio non supporté. Essaie un vrai .mp3."
-        }
-
         return "Erreur : l’API n’arrive pas à prendre en compte ton mp3 pour le moment."
     }
 
@@ -448,8 +426,6 @@ struct SummarizeAudioView: View {
         }
         return "Erreur : l’API n’arrive pas à prendre en compte la régénération."
     }
-
-    // MARK: - Helpers
 
     private func appendBot(_ text: String) {
         messages.append(ChatMessage(text: text, isUser: false, kind: .text))

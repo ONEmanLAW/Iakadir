@@ -1,7 +1,15 @@
+//
+//  OpenAIAudioProxyService.swift
+//  Iakadir
+//
+//  Created by digital on 29/12/2025.
+//
+
 import Foundation
 
 struct OpenAIAudioProxyPayload: Encodable {
-    let model: String
+    let task: String            // "audio"
+    let model: String           // "gpt-4o-mini-transcribe"
     let prompt: String?
     let filename: String
     let audioBase64: String
@@ -13,8 +21,9 @@ struct OpenAIAudioProxyReply: Decodable {
 
 final class OpenAIAudioProxyService {
 
+    // ✅ Une seule function: openai-chat
     private var functionURL: URL {
-        SupabaseConfig.url.appendingPathComponent("functions/v1/openai-audio")
+        SupabaseConfig.url.appendingPathComponent("functions/v1/openai-chat")
     }
 
     func transcribeMP3(
@@ -28,6 +37,7 @@ final class OpenAIAudioProxyService {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // Supabase Edge Function headers
         req.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
 
         if let session = try? await supabase.auth.session {
@@ -37,6 +47,7 @@ final class OpenAIAudioProxyService {
         }
 
         let payload = OpenAIAudioProxyPayload(
+            task: "audio",
             model: model,
             prompt: prompt,
             filename: filename,
