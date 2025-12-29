@@ -16,7 +16,7 @@ final class SoundManager {
 
     func playStartSound() {
         guard let url = Bundle.main.url(forResource: "start", withExtension: "mp3") else {
-            print("⚠️ start.mp3 non trouvé dans le bundle")
+            print("start.mp3 non")
             return
         }
 

@@ -6,7 +6,6 @@
 import SwiftUI
 import UIKit
 
-// UIViewController qui détecte les secousses
 final class ShakeViewController: UIViewController {
     var onShake: (() -> Void)?
 
@@ -19,7 +18,6 @@ final class ShakeViewController: UIViewController {
     }
 }
 
-// Wrapper SwiftUI pour utiliser ShakeViewController
 struct ShakeDetector: UIViewControllerRepresentable {
     var onShake: () -> Void
 

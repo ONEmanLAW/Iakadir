@@ -13,14 +13,13 @@ struct RegisterView: View {
     
     @State private var showPassword = false
     
-    // 🔥 États pour les animations (mêmes que sur LoginView)
     @State private var glow = false
     @State private var floatRobot = false
 
-    // 👇 observer clavier
+
     @StateObject private var keyboard = KeyboardObserver()
 
-    // 👇 gestion du focus des champs
+
     private enum Field {
         case username
         case email
@@ -49,7 +48,6 @@ struct RegisterView: View {
 
                     VStack(spacing: 16) {
                         ZStack {
-                            // 🌟 Halo vert animé
                             Circle()
                                 .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
                                 .frame(width: 160, height: 160)
@@ -61,7 +59,6 @@ struct RegisterView: View {
                                     value: glow
                                 )
 
-                            // 🤖 Robot qui flotte
                             Image("robotMain")
                                 .resizable()
                                 .scaledToFit()
@@ -110,7 +107,7 @@ struct RegisterView: View {
                                 TextField("Ton pseudo", text: $auth.username)
                                     .textInputAutocapitalization(.never)
                                     .focused($focusedField, equals: .username)
-                                    .submitLabel(.next)          // ⏭ Suivant
+                                    .submitLabel(.next)
                                     .onSubmit {
                                         focusedField = .email
                                     }
@@ -124,7 +121,7 @@ struct RegisterView: View {
                             )
                         }
 
-                        // Email
+              
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Email")
                                 .foregroundColor(.gray)
@@ -139,7 +136,7 @@ struct RegisterView: View {
                                     .keyboardType(.emailAddress)
                                     .textInputAutocapitalization(.never)
                                     .focused($focusedField, equals: .email)
-                                    .submitLabel(.next)          // ⏭ Suivant
+                                    .submitLabel(.next)
                                     .onSubmit {
                                         focusedField = .password
                                     }
@@ -153,7 +150,7 @@ struct RegisterView: View {
                             )
                         }
 
-                        // Mot de passe
+                  
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Mot de passe")
                                 .foregroundColor(.gray)
@@ -166,14 +163,14 @@ struct RegisterView: View {
                                 if showPassword {
                                     TextField("Mot de passe", text: $auth.password)
                                         .focused($focusedField, equals: .password)
-                                        .submitLabel(.go)        // ✅ OK / Go
+                                        .submitLabel(.go)
                                         .onSubmit {
                                             Task { await submitRegister() }
                                         }
                                 } else {
                                     SecureField("Mot de passe", text: $auth.password)
                                         .focused($focusedField, equals: .password)
-                                        .submitLabel(.go)        // ✅ OK / Go
+                                        .submitLabel(.go)
                                         .onSubmit {
                                             Task { await submitRegister() }
                                         }
@@ -242,7 +239,7 @@ struct RegisterView: View {
     // MARK: - Actions
 
     private func submitRegister() async {
-        // ferme le clavier
+       
         focusedField = nil
 
         await auth.register()

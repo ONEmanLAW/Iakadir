@@ -54,7 +54,6 @@ struct PaywallView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    // MARK: - Header
 
     private var headerSection: some View {
         ZStack {
@@ -71,7 +70,7 @@ struct PaywallView: View {
                 .frame(height: 280)
 
             VStack {
-                // Top bar
+         
                 HStack {
                     Button {
                         dismiss()
@@ -106,10 +105,10 @@ struct PaywallView: View {
 
                 Spacer()
 
-                // Contenu centré dans l'image
+              
                 VStack(spacing: 16) {
                     ZStack {
-                        // Halo vert animé
+                       
                         Circle()
                             .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
                             .frame(width: 180, height: 180)
@@ -121,7 +120,7 @@ struct PaywallView: View {
                                 value: glow
                             )
 
-                        // Robot qui flotte
+                     
                         Image("robotMain")
                             .resizable()
                             .scaledToFit()
@@ -147,7 +146,7 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Titre + features (bloc centré, icônes alignées à gauche)
+
 
     private var titleAndFeaturesSection: some View {
         VStack(spacing: 16) {
@@ -170,7 +169,7 @@ struct PaywallView: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    // MARK: - Plans
+
 
     private var plansSection: some View {
         VStack(spacing: 14) {
@@ -183,7 +182,6 @@ struct PaywallView: View {
         Color(red: 20/255, green: 20/255, blue: 35/255)
     }
 
-    // — carte hebdomadaire (texte aligné à gauche)
     private var weeklyPlanCard: some View {
         let isSelected = (selectedPlan == .weekly)
 
@@ -216,7 +214,7 @@ struct PaywallView: View {
         }
     }
 
-    // — carte annuelle
+   
     private var yearlyPlanCard: some View {
         let isSelected = (selectedPlan == .yearly)
 
@@ -265,7 +263,7 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Bouton continuer
+
 
     private var continueButton: some View {
         Button {
@@ -292,7 +290,7 @@ struct PaywallView: View {
         .disabled(showAnimation)
     }
 
-    // MARK: - Footer
+
 
     private var footerSection: some View {
         HStack(spacing: 8) {
