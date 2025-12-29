@@ -1,7 +1,6 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Mode de chat
 
 enum ChatMode: String, Codable {
     case assistant
@@ -27,7 +26,6 @@ enum ChatMode: String, Codable {
     var chipLabel: String { "GPT-4" }
 }
 
-// MARK: - Modèles
 
 enum ChatMessageKind: String, Codable {
     case text
@@ -85,7 +83,6 @@ struct ChatMessage: Identifiable, Codable {
     }
 }
 
-// MARK: - ChatView (assistant)
 
 struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
@@ -228,7 +225,6 @@ struct ChatView: View {
         .padding(.bottom, 4)
     }
 
-    // MARK: - Conversation
 
     private func setupConversation() {
         if let id = resolvedConversationID,
@@ -373,7 +369,6 @@ struct ChatView: View {
     }
 }
 
-// MARK: - UI components partagés
 
 struct MessageBubble: View {
     let text: String

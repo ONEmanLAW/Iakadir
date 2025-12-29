@@ -13,17 +13,13 @@ struct LoginView: View {
 
     @State private var showPassword = false
     
-    // 🔥 États pour les animations
     @State private var glow = false
     @State private var floatRobot = false
 
-    // Apparition fluide de la page
     @State private var didAppear = false
 
-    // 👇 observer clavier
     @StateObject private var keyboard = KeyboardObserver()
 
-    // 👇 gestion du focus des champs
     private enum Field {
         case email
         case password
@@ -37,7 +33,6 @@ struct LoginView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
-                    // HEADER
                     HStack {
                         Button {
                             onBack()
@@ -53,10 +48,8 @@ struct LoginView: View {
                     .offset(y: didAppear ? 0 : -10)
                     .animation(.easeOut(duration: 0.4), value: didAppear)
 
-                    // BLOC ROBOT + TITRES
                     VStack(spacing: 16) {
                         ZStack {
-                            // 🌟 Halo vert qui pulse
                             Circle()
                                 .fill(Color.primaryGreen.opacity(glow ? 0.9 : 0.3))
                                 .frame(width: 160, height: 160)
@@ -68,7 +61,6 @@ struct LoginView: View {
                                     value: glow
                                 )
 
-                            // 🤖 Robot qui “vole”
                             Image("robotMain")
                                 .resizable()
                                 .scaledToFit()
@@ -110,7 +102,6 @@ struct LoginView: View {
                     .offset(y: didAppear ? 0 : 10)
                     .animation(.easeOut(duration: 0.45).delay(0.05), value: didAppear)
 
-                    // FORMULAIRE
                     VStack(spacing: 0) {
                         HStack(spacing: 12) {
                             Image(systemName: "envelope")
@@ -120,9 +111,8 @@ struct LoginView: View {
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
                                 .focused($focusedField, equals: .email)
-                                .submitLabel(.next)             // ⏭ "Suivant"
+                                .submitLabel(.next)
                                 .onSubmit {
-                                    // passer au mot de passe
                                     focusedField = .password
                                 }
                         }
@@ -146,14 +136,14 @@ struct LoginView: View {
                             if showPassword {
                                 TextField("Mot de passe", text: $auth.password)
                                     .focused($focusedField, equals: .password)
-                                    .submitLabel(.go)           // ✅ "OK / Go"
+                                    .submitLabel(.go)
                                     .onSubmit {
                                         Task { await submitLogin() }
                                     }
                             } else {
                                 SecureField("Mot de passe", text: $auth.password)
                                     .focused($focusedField, equals: .password)
-                                    .submitLabel(.go)           // ✅ "OK / Go"
+                                    .submitLabel(.go)
                                     .onSubmit {
                                         Task { await submitLogin() }
                                     }
@@ -179,10 +169,9 @@ struct LoginView: View {
                     .offset(y: didAppear ? 0 : 20)
                     .animation(.easeOut(duration: 0.5).delay(0.1), value: didAppear)
 
-                    // LIEN + ERREUR + BOUTON
                     VStack(spacing: 8) {
                         Button {
-                            // plus tard reset mot de passe
+            
                         } label: {
                             Text("Mot de passe oublié ?")
                                 .font(.system(size: 13))
@@ -244,10 +233,8 @@ struct LoginView: View {
         }
     }
 
-    // MARK: - Actions
 
     private func submitLogin() async {
-        // ferme le clavier
         focusedField = nil
         await auth.login()
     }

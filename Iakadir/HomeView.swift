@@ -228,7 +228,6 @@ struct HomeView: View {
         return "Nouvelle conversation"
     }
 
-    // MARK: - Menu / rename (inchangé)
 
     private var menuSheet: some View {
         NavigationStack {
@@ -341,7 +340,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Sous-vues (inchangées)
 
 struct ActionCard: View {
     let title: String

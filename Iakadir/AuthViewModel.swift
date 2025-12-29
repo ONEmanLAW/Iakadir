@@ -41,7 +41,6 @@ class AuthViewModel: ObservableObject {
 
     private var didAttemptRestore = false
 
-    // MARK: - INSCRIPTION
 
     func register() async {
         guard !email.isEmpty, !password.isEmpty, !username.isEmpty else {
@@ -95,8 +94,6 @@ class AuthViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - LOGIN
-
     func login() async {
         guard !email.isEmpty, !password.isEmpty else {
             errorMessage = "Email et mot de passe obligatoires."
@@ -144,7 +141,6 @@ class AuthViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - RESTORE SESSION
 
     func restoreSessionIfNeeded() async {
         guard !didAttemptRestore else { return }
@@ -177,14 +173,13 @@ class AuthViewModel: ObservableObject {
             )
 
             isProUser = false
-            print("✅ Session restaurée pour \(finalEmail)")
+            print("Session restaurée pour \(finalEmail)")
 
         } catch {
-            print("ℹ️ Impossible de restaurer la session :", error.localizedDescription)
+            print("Impossible de restaurer la session :", error.localizedDescription)
         }
     }
 
-    // MARK: - LOGOUT
 
     func logout() async {
         do {

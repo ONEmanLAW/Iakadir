@@ -131,7 +131,7 @@ struct ContentView: View {
 
 
     private func reportProblem() {
-        let to = "support@iakadir.app" // existe pas
+        let to = "support@iakadir.app"
 
         let userID = authViewModel.currentUser?.id.uuidString ?? "guest"
         let device = UIDevice.current.model

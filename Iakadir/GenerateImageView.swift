@@ -45,7 +45,6 @@ struct GenerateImageView: View {
         .onAppear { setupConversation() }
     }
 
-    // MARK: - Setup / Persist
 
     private func setupConversation() {
         if let id = resolvedConversationID,
@@ -71,7 +70,6 @@ struct GenerateImageView: View {
         chatStore.updateConversation(id: id, messages: messages)
     }
 
-    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -104,7 +102,6 @@ struct GenerateImageView: View {
         .padding(.top, 8)
     }
 
-    // MARK: - Style Picker
 
     private var stylePickerRow: some View {
         Menu {
@@ -136,7 +133,6 @@ struct GenerateImageView: View {
         }
     }
 
-    // MARK: - Chat
 
     private var chatContent: some View {
         let lastAssistantId = messages.last(where: { !$0.isUser })?.id
@@ -229,7 +225,6 @@ struct GenerateImageView: View {
         .padding(.horizontal, 4)
     }
 
-    // MARK: - Input
 
     private var inputBar: some View {
         HStack {
@@ -268,7 +263,6 @@ struct GenerateImageView: View {
         .padding(.bottom, 4)
     }
 
-    // MARK: - Quota messages
 
     private func quotaMessageForSubmit(style: ImageStyle) -> String {
         "Votre image \(style.lowercaseLabel) a bien été prise en compte par GPT, mais il n’y a plus assez de crédit sur le compte API, flemme de payer hehe."

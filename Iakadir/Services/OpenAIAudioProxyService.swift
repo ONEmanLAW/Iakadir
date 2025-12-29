@@ -8,8 +8,8 @@
 import Foundation
 
 struct OpenAIAudioProxyPayload: Encodable {
-    let task: String            // "audio"
-    let model: String           // "gpt-4o-mini-transcribe"
+    let task: String
+    let model: String
     let prompt: String?
     let filename: String
     let audioBase64: String
@@ -21,7 +21,6 @@ struct OpenAIAudioProxyReply: Decodable {
 
 final class OpenAIAudioProxyService {
 
-    // ✅ Une seule function: openai-chat
     private var functionURL: URL {
         SupabaseConfig.url.appendingPathComponent("functions/v1/openai-chat")
     }
@@ -37,7 +36,7 @@ final class OpenAIAudioProxyService {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Supabase Edge Function headers
+    
         req.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
 
         if let session = try? await supabase.auth.session {
