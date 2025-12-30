@@ -14,10 +14,10 @@ Le but était de faire ma première application mobile IOS de A à Z.
 
 ## Roadmap du projet
 
-### Étape 1 — UI (maquette -> app)
+### Étape 1 : UI (maquette -> app)
 La première étape du projet, c’est d’implémenter l’UI en reproduisant la maquette.
 
-### Étape 2 — Backend + notifications
+### Étape 2 : Backend + notifications
 La deuxième étape, c’est de mettre en place le backend et d’ajouter un système de notifications.  
 Avec Superbase.
 
